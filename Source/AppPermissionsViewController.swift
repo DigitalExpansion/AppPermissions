@@ -106,7 +106,7 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
         
         var permissionTypes = [PermissionType]()
         for key in array! {
-            if let type = Permission.permissionType(key) {
+            if let type = PermissionType(rawValue: key) {
                 permissionTypes.append(type)
             }
         }
@@ -135,13 +135,13 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
         }
         self.completion = completion
         
-        if types.count == 0 || contains(types, .CoreLocationAlways) || contains(types, .CoreLocationInUse) {
-            self.appPermissions = AppPermissions(needLocationManager: true)
+        if types.count == 0 || contains(types, .LocationAlways) || contains(types, .LocationInUse) {
+            self.appPermissions = AppPermissions(useLocation: true)
         } else {
-            self.appPermissions = AppPermissions(needLocationManager: false)
+            self.appPermissions = AppPermissions()
         }
         self.permissions = permissionsFromPlist(types)
-        if appPermissions!.isAllAuthorizedWithType(self.permissions) {
+        if appPermissions!.isAuthorized(self.permissions) {
             self.completion?(true)
             return
         }
@@ -167,8 +167,7 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
         
         var array = [String]()
         for permission in permissions {
-            let key = Permission.keyString(permission.type)
-            array.append(key)
+            array.append(permission.type.rawValue)
         }
         NSUserDefaults.standardUserDefaults().setValue(array, forKey: "RestoredKeys")
         NSUserDefaults.standardUserDefaults().setBool(true, forKey: "needDrawPermissionController")
@@ -183,7 +182,7 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
             let button = PermissionButton(frame: CGRect(x: (containerWidth - buttonWidth) * 0.5, y: currentOffset, width: buttonWidth, height: buttonHeight), permission: permission)
             button.layer.cornerRadius = buttonHeight * 0.5
             
-            let status = self.appPermissions!.askStatusForType(permission.type)
+            let status = self.appPermissions!.status(forType: permission.type)
             if status == .Authorized {
                 button.setTitleColor(UIColor.whiteColor(), forState: UIControlState.Normal)
                 button.backgroundColor = UIColor(red: 48/255, green: 215/255, blue: 143/255, alpha: 1.0)
@@ -218,7 +217,7 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
     
     @objc private func permissionButtonPressed(button: PermissionButton) {
         
-        self.appPermissions!.askForPermissionForType(button.permission.type, callback: { (requestStatus) -> () in
+        self.appPermissions!.ask(forType: button.permission.type, callback: { requestStatus in
             switch requestStatus {
             case .AlreadyAuthorized:
                 println("PERMISSIONS: nothing to do")
@@ -264,7 +263,7 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
             button.backgroundColor = UIColor(red: 48/255, green: 215/255, blue: 143/255, alpha: 1.0)
             button.permission.imageView?.image = UIImage(named: "ok")
             
-            if self.appPermissions!.isAllAuthorizedWithType(self.permissions) {
+            if self.appPermissions!.isAuthorized(self.permissions) {
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(0.7 * Double(NSEC_PER_SEC))), dispatch_get_main_queue()) { () -> Void in
                     self.hideContainerView(true)
                 }
@@ -402,7 +401,7 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
         var data : NSMutableDictionary = NSMutableDictionary()
         
         for permission in permissions {
-            data.setObject(permission.title, forKey: Permission.keyString(permission.type))
+            data.setObject(permission.title, forKey: permission.type.rawValue)
         }
         data.writeToFile(path, atomically: true)
     }
@@ -431,7 +430,7 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
         
         if needTypes.count == 0 {
             for (key, title) in data {
-                let type = Permission.permissionType(key as! String)
+                let type = PermissionType(rawValue: key as! String)
                 if type != nil {
                     let permission = Permission(type: type!, title: title as! String)
                     resultPermissions.append(permission)
@@ -439,7 +438,7 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
             }
         } else {
             for type in needTypes {
-                let title = data.objectForKey(Permission.keyString(type)) as? String
+                let title = data.objectForKey(type.rawValue) as? String
                 if title != nil {
                     let permission = Permission(type: type, title: title!)
                     resultPermissions.append(permission)
