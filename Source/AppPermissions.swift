@@ -15,12 +15,10 @@ import CoreLocation
 
 
 class Permission: NSObject {
-    
     let type : PermissionType
     let title : String
     var button: UIButton?
     var imageView: UIImageView?
-//    var key: String { return type.key() }
     
     init(type: PermissionType, title: String) {
         self.type = type
@@ -64,7 +62,7 @@ enum RequestStatusCallback {
 class AppPermissions: NSObject, CLLocationManagerDelegate {
     
     var locationManager: CLLocationManager?
-    var tempBlock: ((RequestStatusCallback) -> ())?
+    var completionBlock: ((RequestStatusCallback) -> ())?
     
     init(useLocation: Bool = false) {
         super.init()
@@ -101,7 +99,6 @@ class AppPermissions: NSObject, CLLocationManagerDelegate {
     
     
     func ask(forType type: PermissionType, callback: ((RequestStatusCallback) -> ())) {
-        
         let status: StatusType = self.status(forType: type)
         
         if status == .Authorized {
@@ -274,7 +271,7 @@ class AppPermissions: NSObject, CLLocationManagerDelegate {
             NSUserDefaults.standardUserDefaults().setBool(true, forKey: "requestedInUseToAlwaysUpgrade")
             NSUserDefaults.standardUserDefaults().synchronize()
         }
-        tempBlock = completion
+        completionBlock = completion
         locationManager?.delegate = self
         locationManager?.requestAlwaysAuthorization()
     }
@@ -291,7 +288,7 @@ class AppPermissions: NSObject, CLLocationManagerDelegate {
     }
     
     private func askLocationInUse(completion: ((RequestStatusCallback) -> ())) {
-        tempBlock = completion
+        completionBlock = completion
         locationManager?.delegate = self
         locationManager?.requestWhenInUseAuthorization()
     }
@@ -301,9 +298,9 @@ class AppPermissions: NSObject, CLLocationManagerDelegate {
     
     func locationManager(manager: CLLocationManager!, didChangeAuthorizationStatus status: CLAuthorizationStatus) {
         if status != .Denied {
-            tempBlock?(.JustAuthorized)
+            completionBlock?(.JustAuthorized)
         } else {
-            tempBlock?(.Denied)
+            completionBlock?(.Denied)
         }
     }
     
