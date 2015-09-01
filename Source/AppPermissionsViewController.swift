@@ -195,6 +195,8 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
             
             button.titleLabel?.font = UIFont(name: "HelveticaNeue-Medium", size: 15)
             button.setTitle(permission.title, forState: UIControlState.Normal)
+            button.contentHorizontalAlignment = UIControlContentHorizontalAlignment.Left
+            button.titleEdgeInsets = UIEdgeInsetsMake(0, buttonHeight + 10, 0, 0)
             button.addTarget(self, action: "permissionButtonPressed:", forControlEvents: UIControlEvents.TouchUpInside)
             self.containerView?.addSubview(button)
             permission.button = button
