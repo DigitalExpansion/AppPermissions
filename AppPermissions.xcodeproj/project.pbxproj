@@ -12,6 +12,8 @@
 		B6E4E5141B95BAB600F1BC6B /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B6E4E5121B95BAB600F1BC6B /* Main.storyboard */; };
 		B6E4E5161B95BAB600F1BC6B /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B6E4E5151B95BAB600F1BC6B /* Images.xcassets */; };
 		B6E4E5191B95BAB600F1BC6B /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = B6E4E5171B95BAB600F1BC6B /* LaunchScreen.xib */; };
+		B6E4E5311B95C9F800F1BC6B /* AppPermissions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6E4E52F1B95C9F800F1BC6B /* AppPermissions.swift */; };
+		B6E4E5321B95C9F800F1BC6B /* AppPermissionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6E4E5301B95C9F800F1BC6B /* AppPermissionsViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,6 +24,8 @@
 		B6E4E5131B95BAB600F1BC6B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		B6E4E5151B95BAB600F1BC6B /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		B6E4E5181B95BAB600F1BC6B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
+		B6E4E52F1B95C9F800F1BC6B /* AppPermissions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = AppPermissions.swift; path = AppPermissions/AppPermissions.swift; sourceTree = SOURCE_ROOT; };
+		B6E4E5301B95C9F800F1BC6B /* AppPermissionsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = AppPermissionsViewController.swift; path = AppPermissions/AppPermissionsViewController.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,6 +58,7 @@
 		B6E4E50B1B95BAB600F1BC6B /* AppPermissions-Example */ = {
 			isa = PBXGroup;
 			children = (
+				B6E4E52E1B95C97900F1BC6B /* AppPermissions */,
 				B6E4E50E1B95BAB600F1BC6B /* AppDelegate.swift */,
 				B6E4E5101B95BAB600F1BC6B /* ViewController.swift */,
 				B6E4E5121B95BAB600F1BC6B /* Main.storyboard */,
@@ -70,6 +75,15 @@
 				B6E4E50D1B95BAB600F1BC6B /* Info.plist */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		B6E4E52E1B95C97900F1BC6B /* AppPermissions */ = {
+			isa = PBXGroup;
+			children = (
+				B6E4E52F1B95C9F800F1BC6B /* AppPermissions.swift */,
+				B6E4E5301B95C9F800F1BC6B /* AppPermissionsViewController.swift */,
+			);
+			name = AppPermissions;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -142,6 +156,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B6E4E5311B95C9F800F1BC6B /* AppPermissions.swift in Sources */,
+				B6E4E5321B95C9F800F1BC6B /* AppPermissionsViewController.swift in Sources */,
 				B6E4E5111B95BAB600F1BC6B /* ViewController.swift in Sources */,
 				B6E4E50F1B95BAB600F1BC6B /* AppDelegate.swift in Sources */,
 			);
