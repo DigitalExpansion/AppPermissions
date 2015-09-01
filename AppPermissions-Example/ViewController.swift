@@ -8,16 +8,33 @@
 
 import UIKit
 
-class ViewController: UIViewController {
+class PermissionSwitch : UISwitch {
+    var type: PermissionType?
+}
 
+class ViewController: UITableViewController {
+
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
+        
+        navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .Done, target: self, action: "doneButtonPressed")
+        navigationItem.title = "AppPermissions"
+    }
+    
+    
+    @objc private func doneButtonPressed() {
     }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
+    }
+    
+    
+    
+    override func tableView(tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        return CGFloat.min
     }
 
 
