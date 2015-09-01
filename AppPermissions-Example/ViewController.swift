@@ -31,7 +31,7 @@ class PermissionCell: UITableViewCell {
 class ViewController: UITableViewController {
 
     
-    let typesData: [PermissionType] = [.AssetLibrary, .Camera, .Calendars, .Contacts, .CoreLocationAlways, .CoreLocationInUse, .Microphone, .Notifications, .Reminders]
+    let typesData: [PermissionType] = [.AssetsLibrary, .Camera, .Calendars, .Contacts, .LocationAlways, .LocationInUse, .Microphone, .Notifications, .Reminders]
     var needTypes = [PermissionType]()
     
     override func viewDidLoad() {
