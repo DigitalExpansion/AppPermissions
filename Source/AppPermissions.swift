@@ -20,64 +20,12 @@ class Permission: NSObject {
     let title : String
     var button: UIButton?
     var imageView: UIImageView?
+//    var key: String { return type.key() }
     
     init(type: PermissionType, title: String) {
-        
         self.type = type
         self.title = title
         super.init()
-    }
-    
-    class func keyString(type: PermissionType) -> String {
-        switch type {
-        case .AssetsLibrary:
-            return "asset_library_key"
-        case .Camera:
-            return "camera_key"
-        case .Calendars:
-            return "calendars_key"
-        case .Contacts:
-            return "contacts_key"
-        case .LocationAlways:
-            return "location_always_key"
-        case .LocationInUse:
-            return "location_inuse_key"
-        case .Microphone:
-            return "microphone_key"
-        case .Notifications:
-            return "notifications_key"
-        case .Reminders:
-            return "reminders_key"
-        case .Photos:
-            return "photos_key"
-        }
-    }
-    
-    class func permissionType(keyString : String) -> PermissionType? {
-        switch keyString {
-        case "asset_library_key":
-            return .AssetsLibrary
-        case "camera_key":
-            return .Camera
-        case "calendars_key":
-            return .Calendars
-        case "contacts_key":
-            return .Contacts
-        case "location_always_key":
-            return .LocationAlways
-        case "location_inuse_key":
-            return .LocationInUse
-        case "microphone_key":
-            return .Microphone
-        case "notifications_key":
-            return .Notifications
-        case "reminders_key":
-            return .Reminders
-        case "photos_key":
-            return .Photos
-        default:
-            return nil
-        }
     }
 }
 
