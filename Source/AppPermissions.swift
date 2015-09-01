@@ -118,46 +118,33 @@ class AppPermissions: NSObject, CLLocationManagerDelegate {
     var locationManager: CLLocationManager?
     var tempBlock: ((RequestStatusCallback) -> ())?
     
-    init(needLocationManager: Bool) {
+    init(useLocation: Bool = false) {
         super.init()
-        if needLocationManager {
+        if useLocation {
             locationManager = CLLocationManager()
         }
     }
     
     
-    func askStatusForType(type: PermissionType) -> StatusType {
-        
+    func status(forType type: PermissionType) -> StatusType {
         switch type {
-        case .AssetLibrary:
-            return AssetsLibraryPermissionStatus()
-        case .Camera:
-            return CameraPermissionStatus()
-        case .Calendars:
-            return CalendarPermissionStatus()
-        case .Contacts:
-            return ContactsPermissionStatus()
-        case .Microphone:
-            return MicrophonePermissionStatus()
-        case .Notifications:
-            return NotificationsPermissionStatus()
-        case .CoreLocationAlways:
-            return LocationAlwaysPermissionStatus()
-        case .CoreLocationInUse:
-            return LocationInUsePermissionStatus()
+        case .AssetLibrary:       return AssetsLibraryPermissionStatus()
+        case .Camera:             return CameraPermissionStatus()
+        case .Calendars:          return CalendarPermissionStatus()
+        case .Contacts:           return ContactsPermissionStatus()
+        case .Microphone:         return MicrophonePermissionStatus()
+        case .Notifications:      return NotificationsPermissionStatus()
+        case .CoreLocationAlways: return LocationAlwaysPermissionStatus()
+        case .CoreLocationInUse:  return LocationInUsePermissionStatus()
         default:
-            break
+            return .NotDetermined
         }
-        
-        return .NotDetermined
     }
     
     
-    func isAllAuthorizedWithType(permissions: [Permission]) -> Bool {
-        
+    func isAuthorized(permissions: [Permission]) -> Bool {
         for permission in permissions {
-            let status = askStatusForType(permission.type)
-            if status != .Authorized {
+            if self.status(forType: permission.type) != .Authorized {
                 return false
             }
         }
@@ -165,7 +152,7 @@ class AppPermissions: NSObject, CLLocationManagerDelegate {
     }
     
     
-    func askForPermissionForType(type: PermissionType, callback: ((RequestStatusCallback) -> ())) {
+    func ask(forType type: PermissionType, callback: ((RequestStatusCallback) -> ())) {
         
         switch type {
         case .AssetLibrary:
@@ -469,15 +456,5 @@ class AppPermissions: NSObject, CLLocationManagerDelegate {
         locationManager?.delegate = self
         locationManager?.requestWhenInUseAuthorization()
     }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
 }
