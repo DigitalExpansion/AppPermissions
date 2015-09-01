@@ -104,14 +104,14 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
             return
         }
         
-        var permissionTypes = [PermissionTypes]()
+        var permissionTypes = [PermissionType]()
         for key in array! {
             if let type = Permission.permissionType(key) {
                 permissionTypes.append(type)
             }
         }
         
-        self.controller(parentController).present(requiredTypes: permissionTypes) { (success) -> Void in
+        self.controller(parentController).present(permissionTypes) { (success) -> Void in
         }
     }
     
@@ -125,7 +125,7 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
     }
     
     
-    func present(# requiredTypes: [PermissionTypes], completion: ((Bool)->Void)) {
+    func present(types: [PermissionType], completion: ((Bool)->Void)) {
         
         NSUserDefaults.standardUserDefaults().setBool(false, forKey: "needDrawPermissionController")
         NSUserDefaults.standardUserDefaults().synchronize()
@@ -135,12 +135,12 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
         }
         self.completion = completion
         
-        if requiredTypes.count == 0 || contains(requiredTypes, .CoreLocationAlways) || contains(requiredTypes, .CoreLocationInUse) {
+        if types.count == 0 || contains(types, .CoreLocationAlways) || contains(types, .CoreLocationInUse) {
             self.appPermissions = AppPermissions(needLocationManager: true)
         } else {
             self.appPermissions = AppPermissions(needLocationManager: false)
         }
-        self.permissions = permissionsFromPlist(requiredTypes)
+        self.permissions = permissionsFromPlist(types)
         if appPermissions!.isAllAuthorizedWithType(self.permissions) {
             self.completion?(true)
             return
@@ -408,7 +408,7 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
     }
     
     
-    private func permissionsFromPlist(needTypes: [PermissionTypes]) -> [Permission] {
+    private func permissionsFromPlist(needTypes: [PermissionType]) -> [Permission] {
         
         var resultPermissions = [Permission]()
         

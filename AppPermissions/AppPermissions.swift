@@ -16,19 +16,19 @@ import CoreLocation
 
 class Permission: NSObject {
     
-    let type : PermissionTypes
+    let type : PermissionType
     let title : String
     var button: UIButton?
     var imageView: UIImageView?
     
-    init(type: PermissionTypes, title: String) {
+    init(type: PermissionType, title: String) {
         
         self.type = type
         self.title = title
         super.init()
     }
     
-    class func keyString(type: PermissionTypes) -> String {
+    class func keyString(type: PermissionType) -> String {
         switch type {
         case .AssetLibrary:
             return "asset_library_key"
@@ -53,7 +53,7 @@ class Permission: NSObject {
         }
     }
     
-    class func permissionType(keyString : String) -> PermissionTypes? {
+    class func permissionType(keyString : String) -> PermissionType? {
         switch keyString {
         case "asset_library_key":
             return .AssetLibrary
@@ -82,7 +82,7 @@ class Permission: NSObject {
 }
 
 
-enum PermissionTypes : String {
+enum PermissionType : String {
     case AssetLibrary = "Camera Roll"               //
     case Camera = "Camera"                          // Record Video
     case Calendars = "Calendars"                    //
@@ -96,7 +96,7 @@ enum PermissionTypes : String {
 }
 
 
-enum StatusTypes {
+enum StatusType {
     case Authorized
     case Denied
     case NotDetermined
@@ -126,7 +126,7 @@ class AppPermissions: NSObject, CLLocationManagerDelegate {
     }
     
     
-    func askStatusForType(type: PermissionTypes) -> StatusTypes {
+    func askStatusForType(type: PermissionType) -> StatusType {
         
         switch type {
         case .AssetLibrary:
@@ -165,7 +165,7 @@ class AppPermissions: NSObject, CLLocationManagerDelegate {
     }
     
     
-    func askForPermissionForType(type: PermissionTypes, callback: ((RequestStatusCallback) -> ())) {
+    func askForPermissionForType(type: PermissionType, callback: ((RequestStatusCallback) -> ())) {
         
         switch type {
         case .AssetLibrary:
@@ -249,7 +249,7 @@ class AppPermissions: NSObject, CLLocationManagerDelegate {
     
     // MARK: - Permissions Methods
     
-    private func AssetsLibraryPermissionStatus() -> StatusTypes {
+    private func AssetsLibraryPermissionStatus() -> StatusType {
         let status = ALAssetsLibrary.authorizationStatus()
         switch status {
         case .Authorized:
@@ -276,7 +276,7 @@ class AppPermissions: NSObject, CLLocationManagerDelegate {
     }
     
     
-    private func CameraPermissionStatus() -> StatusTypes {
+    private func CameraPermissionStatus() -> StatusType {
         let status = AVCaptureDevice.authorizationStatusForMediaType(AVMediaTypeVideo)
         switch status {
         case .Authorized:
@@ -303,7 +303,7 @@ class AppPermissions: NSObject, CLLocationManagerDelegate {
     }
     
     
-    private func CalendarPermissionStatus() -> StatusTypes {
+    private func CalendarPermissionStatus() -> StatusType {
         let status = EKEventStore.authorizationStatusForEntityType(EKEntityTypeEvent)
         switch status {
         case .Authorized:
@@ -328,7 +328,7 @@ class AppPermissions: NSObject, CLLocationManagerDelegate {
     }
     
     
-    private func ContactsPermissionStatus() -> StatusTypes {
+    private func ContactsPermissionStatus() -> StatusType {
         let status = ABAddressBookGetAuthorizationStatus()
         switch status {
         case .Authorized:
@@ -355,7 +355,7 @@ class AppPermissions: NSObject, CLLocationManagerDelegate {
     }
     
     
-    private func MicrophonePermissionStatus() -> StatusTypes {
+    private func MicrophonePermissionStatus() -> StatusType {
         let status = AVAudioSession.sharedInstance().recordPermission()
         switch status {
         case AVAudioSessionRecordPermission.Denied:
@@ -380,7 +380,7 @@ class AppPermissions: NSObject, CLLocationManagerDelegate {
     }
     
     
-    private func NotificationsPermissionStatus() -> StatusTypes {
+    private func NotificationsPermissionStatus() -> StatusType {
         let settings = UIApplication.sharedApplication().currentUserNotificationSettings()
         if settings.types != UIUserNotificationType.None {
             return .Authorized
@@ -409,7 +409,7 @@ class AppPermissions: NSObject, CLLocationManagerDelegate {
     }
     
     
-    private func LocationAlwaysPermissionStatus() -> StatusTypes {
+    private func LocationAlwaysPermissionStatus() -> StatusType {
         if !CLLocationManager.locationServicesEnabled() {
             return .Denied
         }
@@ -449,7 +449,7 @@ class AppPermissions: NSObject, CLLocationManagerDelegate {
     }
     
     
-    private func LocationInUsePermissionStatus() -> StatusTypes {
+    private func LocationInUsePermissionStatus() -> StatusType {
         if !CLLocationManager.locationServicesEnabled() {
             return .Denied
         }
