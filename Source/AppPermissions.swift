@@ -30,7 +30,7 @@ class Permission: NSObject {
     
     class func keyString(type: PermissionType) -> String {
         switch type {
-        case .AssetLibrary:
+        case .AssetsLibrary:
             return "asset_library_key"
         case .Camera:
             return "camera_key"
@@ -38,9 +38,9 @@ class Permission: NSObject {
             return "calendars_key"
         case .Contacts:
             return "contacts_key"
-        case .CoreLocationAlways:
+        case .LocationAlways:
             return "location_always_key"
-        case .CoreLocationInUse:
+        case .LocationInUse:
             return "location_inuse_key"
         case .Microphone:
             return "microphone_key"
@@ -56,7 +56,7 @@ class Permission: NSObject {
     class func permissionType(keyString : String) -> PermissionType? {
         switch keyString {
         case "asset_library_key":
-            return .AssetLibrary
+            return .AssetsLibrary
         case "camera_key":
             return .Camera
         case "calendars_key":
@@ -64,9 +64,9 @@ class Permission: NSObject {
         case "contacts_key":
             return .Contacts
         case "location_always_key":
-            return .CoreLocationAlways
+            return .LocationAlways
         case "location_inuse_key":
-            return .CoreLocationInUse
+            return .LocationInUse
         case "microphone_key":
             return .Microphone
         case "notifications_key":
@@ -83,16 +83,16 @@ class Permission: NSObject {
 
 
 enum PermissionType : String {
-    case AssetLibrary = "Camera Roll"               //
-    case Camera = "Camera"                          // Record Video
-    case Calendars = "Calendars"                    //
-    case Contacts = "Contacts"                      //
-    case CoreLocationAlways = "Location Always"     //
-    case CoreLocationInUse = "Location In Use"      //
-    case Microphone = "Microphone"                  //
-    case Notifications = "Notifications"            //
-    case Reminders = "Reminders"                    //  EventKit Framework
-    case Photos = "Photos"                          //  iOS 8 (Photo Framework)
+    case AssetsLibrary  = "Camera Roll"
+    case Camera         = "Camera"
+    case Calendars      = "Calendars"
+    case Contacts       = "Contacts"
+    case LocationAlways = "Location Always"
+    case LocationInUse  = "Location In Use"
+    case Microphone     = "Microphone"
+    case Notifications  = "Notifications"
+    case Reminders      = "Reminders"
+    case Photos         = "Photos"     // iOS 8 (Photo Framework)
 }
 
 
@@ -128,14 +128,14 @@ class AppPermissions: NSObject, CLLocationManagerDelegate {
     
     func status(forType type: PermissionType) -> StatusType {
         switch type {
-        case .AssetLibrary:       return AssetsLibraryPermissionStatus()
-        case .Camera:             return CameraPermissionStatus()
-        case .Calendars:          return CalendarPermissionStatus()
-        case .Contacts:           return ContactsPermissionStatus()
-        case .Microphone:         return MicrophonePermissionStatus()
-        case .Notifications:      return NotificationsPermissionStatus()
-        case .CoreLocationAlways: return LocationAlwaysPermissionStatus()
-        case .CoreLocationInUse:  return LocationInUsePermissionStatus()
+        case .AssetsLibrary:  return statusForAssetsLibrary()
+        case .Camera:         return statusForCamera()
+        case .Calendars:      return statusForCalendar()
+        case .Contacts:       return statusForContacts()
+        case .Microphone:     return statusForMicrophone()
+        case .Notifications:  return statusForNotifications()
+        case .LocationAlways: return statusForLocationAlways()
+        case .LocationInUse:  return statusForLocationInUse()
         default:
             return .NotDetermined
         }
@@ -154,79 +154,27 @@ class AppPermissions: NSObject, CLLocationManagerDelegate {
     
     func ask(forType type: PermissionType, callback: ((RequestStatusCallback) -> ())) {
         
-        switch type {
-        case .AssetLibrary:
-            if AssetsLibraryPermissionStatus() == .NotDetermined {
-                AssetsLibraryAskPermission(callback)
-            } else if AssetsLibraryPermissionStatus() == .Authorized {
-                callback(RequestStatusCallback.AlreadyAuthorized)
-            } else {
-                callback(RequestStatusCallback.NeedSettings)
-            }
+        let status: StatusType = self.status(forType: type)
         
-        case .Camera:
-            if CameraPermissionStatus() == .NotDetermined {
-                CameraAskPermission(callback)
-            } else if CameraPermissionStatus() == .Authorized {
-                callback(RequestStatusCallback.AlreadyAuthorized)
-            } else {
-                callback(RequestStatusCallback.NeedSettings)
-            }
-            
-        case  .Calendars:
-            if CalendarPermissionStatus() == .NotDetermined {
-                CalendarAskPermission(callback)
-            } else if CalendarPermissionStatus() == .Authorized {
-                callback(RequestStatusCallback.AlreadyAuthorized)
-            } else {
-                callback(RequestStatusCallback.NeedSettings)
-            }
-            
-        case .Contacts:
-            if ContactsPermissionStatus() == .NotDetermined {
-                ContactsAskPermission(callback)
-            } else if ContactsPermissionStatus() == .Authorized {
-                callback(RequestStatusCallback.AlreadyAuthorized)
-            } else {
-                callback(RequestStatusCallback.NeedSettings)
-            }
-            
-        case .Microphone:
-            if MicrophonePermissionStatus() == .NotDetermined {
-                MicrophoneAskPermission(callback)
-            } else if MicrophonePermissionStatus() == .Authorized {
-                callback(RequestStatusCallback.AlreadyAuthorized)
-            } else {
-                callback(RequestStatusCallback.NeedSettings)
-            }
-            
-        case .Notifications:
-            if NotificationsPermissionStatus() == .NotDetermined {
-                NotificationsAskPermission(callback)
-            } else if NotificationsPermissionStatus() == .Authorized {
-                callback(RequestStatusCallback.AlreadyAuthorized)
-            } else {
-                callback(RequestStatusCallback.NeedSettings)
-            }
-            
-        case .CoreLocationAlways:
-            if LocationAlwaysPermissionStatus() == .NotDetermined {
-                LocationAlwaysAskPermission(callback)
-            } else if LocationAlwaysPermissionStatus() == .Authorized {
-                callback(RequestStatusCallback.AlreadyAuthorized)
-            } else {
-                callback(RequestStatusCallback.NeedSettings)
-            }
-            
-        case .CoreLocationInUse:
-            if LocationInUsePermissionStatus() == .NotDetermined {
-                LocationInUseAskPermission(callback)
-            } else if LocationInUsePermissionStatus() == .Authorized {
-                callback(RequestStatusCallback.AlreadyAuthorized)
-            } else {
-                callback(RequestStatusCallback.NeedSettings)
-            }
-            
+        if status == .Authorized {
+            callback(RequestStatusCallback.AlreadyAuthorized)
+            return
+        }
+        if status == .Denied || status == .Restricted {
+            callback(RequestStatusCallback.NeedSettings)
+            return
+        }
+        
+        // if status == .NotDetermined
+        switch type {
+        case .AssetsLibrary:  askAssetsLibrary(callback)
+        case .Camera:         askCamera(callback)
+        case .Calendars:      askCalendar(callback)
+        case .Contacts:       askContacts(callback)
+        case .Microphone:     askMicrophone(callback)
+        case .Notifications:  askNotifications(callback)
+        case .LocationAlways: askLocationAlways(callback)
+        case .LocationInUse:  askLocationInUse(callback)
         default:
             callback(RequestStatusCallback.Denied)
         }
@@ -236,138 +184,101 @@ class AppPermissions: NSObject, CLLocationManagerDelegate {
     
     // MARK: - Permissions Methods
     
-    private func AssetsLibraryPermissionStatus() -> StatusType {
-        let status = ALAssetsLibrary.authorizationStatus()
-        switch status {
-        case .Authorized:
-            return .Authorized
-        case .Denied:
-            return .Denied
-        case .NotDetermined:
-            return .NotDetermined
-        case .Restricted:
-            return .Restricted
+    private func statusForAssetsLibrary() -> StatusType {
+        switch ALAssetsLibrary.authorizationStatus() {
+        case .Authorized:    return .Authorized
+        case .Denied:        return .Denied
+        case .NotDetermined: return .NotDetermined
+        case .Restricted:    return .Restricted
         }
     }
     
-    private func AssetsLibraryAskPermission(completion: ((RequestStatusCallback) -> ())) {
+    private func askAssetsLibrary(completion: ((RequestStatusCallback) -> ())) {
         var stop : UnsafeMutablePointer<Bool> = nil
-        ALAssetsLibrary().enumerateGroupsWithTypes(ALAssetsGroupAll, usingBlock: { (group, stop) -> Void in
-            if stop != nil {
-                stop.memory = true
-                completion(RequestStatusCallback.JustAuthorized)
-            }
-            }, failureBlock: { (error) -> Void in
+        ALAssetsLibrary().enumerateGroupsWithTypes(ALAssetsGroupAll,
+            usingBlock: { group, stop in
+                if stop != nil {
+                    stop.memory = true
+                    completion(RequestStatusCallback.JustAuthorized)
+                }
+            }, failureBlock: { error in
                 completion(RequestStatusCallback.Denied)
         })
     }
     
     
-    private func CameraPermissionStatus() -> StatusType {
-        let status = AVCaptureDevice.authorizationStatusForMediaType(AVMediaTypeVideo)
-        switch status {
-        case .Authorized:
-            return .Authorized
-        case .Denied:
-            return .Denied
-        case .NotDetermined:
-            return .NotDetermined
-        case .Restricted:
-            return .Restricted
+    private func statusForCamera() -> StatusType {
+        switch AVCaptureDevice.authorizationStatusForMediaType(AVMediaTypeVideo) {
+        case .Authorized:    return .Authorized
+        case .Denied:        return .Denied
+        case .NotDetermined: return .NotDetermined
+        case .Restricted:    return .Restricted
         }
     }
     
-    private func CameraAskPermission(completion: ((RequestStatusCallback) -> ())) {
-        dispatch_async(dispatch_get_main_queue(), { () -> Void in
-            AVCaptureDevice.requestAccessForMediaType(AVMediaTypeVideo, completionHandler: { (success) -> Void in
-                if success {
-                    completion(.JustAuthorized)
-                } else {
-                    completion(.Denied)
-                }
+    private func askCamera(completion: ((RequestStatusCallback) -> ())) {
+        dispatch_async(dispatch_get_main_queue(), {
+            AVCaptureDevice.requestAccessForMediaType(AVMediaTypeVideo, completionHandler: { success in
+                let status: RequestStatusCallback = success ? .JustAuthorized : .Denied
+                completion(status)
             })
         })
     }
     
     
-    private func CalendarPermissionStatus() -> StatusType {
-        let status = EKEventStore.authorizationStatusForEntityType(EKEntityTypeEvent)
-        switch status {
-        case .Authorized:
-            return .Authorized
-        case .Denied:
-            return .Denied
-        case .NotDetermined:
-            return .NotDetermined
-        case .Restricted:
-            return .Restricted
+    private func statusForCalendar() -> StatusType {
+        switch EKEventStore.authorizationStatusForEntityType(EKEntityTypeEvent) {
+        case .Authorized:    return .Authorized
+        case .Denied:        return .Denied
+        case .NotDetermined: return .NotDetermined
+        case .Restricted:    return .Restricted
         }
     }
     
-    private func CalendarAskPermission(completion: ((RequestStatusCallback) -> ())) {
-        EKEventStore().requestAccessToEntityType(EKEntityTypeEvent, completion: { (granted, error) -> Void in
-            if granted {
-                completion(.JustAuthorized)
-            } else {
-                completion(.Denied)
-            }
+    private func askCalendar(completion: ((RequestStatusCallback) -> ())) {
+        EKEventStore().requestAccessToEntityType(EKEntityTypeEvent, completion: { granted, error in
+            let status: RequestStatusCallback = granted ? .JustAuthorized : .Denied
+            completion(status)
         })
     }
     
     
-    private func ContactsPermissionStatus() -> StatusType {
-        let status = ABAddressBookGetAuthorizationStatus()
-        switch status {
-        case .Authorized:
-            return .Authorized
-        case .Denied:
-            return .Denied
-        case .NotDetermined:
-            return .NotDetermined
-        case .Restricted:
-            return .Restricted
-            
+    private func statusForContacts() -> StatusType {
+        switch ABAddressBookGetAuthorizationStatus() {
+        case .Authorized:    return .Authorized
+        case .Denied:        return .Denied
+        case .NotDetermined: return .NotDetermined
+        case .Restricted:    return .Restricted
         }
     }
     
     
-    private func ContactsAskPermission(completion: ((RequestStatusCallback) -> ())) {
-        ABAddressBookRequestAccessWithCompletion(nil) { (granted, error) -> Void in
-            if granted {
-                completion(.JustAuthorized)
-            } else {
-                completion(.Denied)
-            }
+    private func askContacts(completion: ((RequestStatusCallback) -> ())) {
+        ABAddressBookRequestAccessWithCompletion(nil) { granted, error in
+            let status: RequestStatusCallback = granted ? .JustAuthorized : .Denied
+            completion(status)
         }
     }
     
     
-    private func MicrophonePermissionStatus() -> StatusType {
-        let status = AVAudioSession.sharedInstance().recordPermission()
-        switch status {
-        case AVAudioSessionRecordPermission.Denied:
-            return .Denied
-        case AVAudioSessionRecordPermission.Undetermined:
-            return .NotDetermined
-        case AVAudioSessionRecordPermission.Granted:
-            return .Authorized
-        default:
-            return .Restricted
+    private func statusForMicrophone() -> StatusType {
+        switch AVAudioSession.sharedInstance().recordPermission() {
+        case AVAudioSessionRecordPermission.Denied:       return .Denied
+        case AVAudioSessionRecordPermission.Undetermined: return .NotDetermined
+        case AVAudioSessionRecordPermission.Granted:      return .Authorized
+        default: return .Restricted
         }
     }
     
-    private func MicrophoneAskPermission(completion: ((RequestStatusCallback) -> ())) {
-        AVAudioSession.sharedInstance().requestRecordPermission { (granted) -> Void in
-            if granted {
-                completion(.JustAuthorized)
-            } else {
-                completion(.Denied)
-            }
+    private func askMicrophone(completion: ((RequestStatusCallback) -> ())) {
+        AVAudioSession.sharedInstance().requestRecordPermission { granted in
+            let status: RequestStatusCallback = granted ? .JustAuthorized : .Denied
+            completion(status)
         }
     }
     
     
-    private func NotificationsPermissionStatus() -> StatusType {
+    private func statusForNotifications() -> StatusType {
         let settings = UIApplication.sharedApplication().currentUserNotificationSettings()
         if settings.types != UIUserNotificationType.None {
             return .Authorized
@@ -380,15 +291,11 @@ class AppPermissions: NSObject, CLLocationManagerDelegate {
         }
     }
     
-    private func NotificationsAskPermission(completion: ((RequestStatusCallback) -> ())) {
-        NSNotificationCenter.defaultCenter().addObserverForName(UIApplicationDidBecomeActiveNotification, object: nil, queue: NSOperationQueue.mainQueue()) { (notification) -> Void in
+    private func askNotifications(completion: ((RequestStatusCallback) -> ())) {
+        NSNotificationCenter.defaultCenter().addObserverForName(UIApplicationDidBecomeActiveNotification, object: nil, queue: NSOperationQueue.mainQueue()) { notification in
             NSNotificationCenter.defaultCenter().removeObserver(self, name: UIApplicationDidBecomeActiveNotification, object: nil)
-            let status = self.NotificationsPermissionStatus()
-            if status == .Authorized {
-                completion(.JustAuthorized)
-            } else {
-                completion(.Denied)
-            }
+            let status: RequestStatusCallback = (self.statusForNotifications() == .Authorized) ? .JustAuthorized : .Denied
+            completion(status)
         }
         NSUserDefaults.standardUserDefaults().setBool(true, forKey: "PermissionScopeAskedForNotificationsDefaultsKey")
         UIApplication.sharedApplication().registerUserNotificationSettings(UIUserNotificationSettings(forTypes: .Alert | .Sound | .Badge, categories: nil))
@@ -396,28 +303,25 @@ class AppPermissions: NSObject, CLLocationManagerDelegate {
     }
     
     
-    private func LocationAlwaysPermissionStatus() -> StatusType {
+    private func statusForLocationAlways() -> StatusType {
         if !CLLocationManager.locationServicesEnabled() {
             return .Denied
         }
-        let status = CLLocationManager.authorizationStatus()
-        switch status {
-        case .AuthorizedAlways:
-            return .Authorized
-        case .Restricted, .Denied:
-            return .Denied
+        switch CLLocationManager.authorizationStatus() {
+        case .AuthorizedAlways: return .Authorized
+        case .Restricted:       return .Denied
+        case .Denied:           return .Denied
+        case .NotDetermined:    return .NotDetermined
         case .AuthorizedWhenInUse:
             if NSUserDefaults.standardUserDefaults().boolForKey("requestedInUseToAlwaysUpgrade") == true {
                 return .Denied
             } else {
                 return .NotDetermined
             }
-        case .NotDetermined:
-            return .NotDetermined
         }
     }
     
-    private func LocationAlwaysAskPermission(completion: ((RequestStatusCallback) -> ())) {
+    private func askLocationAlways(completion: ((RequestStatusCallback) -> ())) {
         if CLLocationManager.authorizationStatus() == .AuthorizedWhenInUse {
             NSUserDefaults.standardUserDefaults().setBool(true, forKey: "requestedInUseToAlwaysUpgrade")
             NSUserDefaults.standardUserDefaults().synchronize()
@@ -427,34 +331,32 @@ class AppPermissions: NSObject, CLLocationManagerDelegate {
         locationManager?.requestAlwaysAuthorization()
     }
     
+    private func statusForLocationInUse() -> StatusType {
+        if !CLLocationManager.locationServicesEnabled() {
+            return .Denied
+        }
+        switch CLLocationManager.authorizationStatus() {
+        case .AuthorizedAlways, .AuthorizedWhenInUse: return .Authorized
+        case .Restricted, .Denied:                    return .Denied
+        case .NotDetermined:                          return .NotDetermined
+        }
+    }
+    
+    private func askLocationInUse(completion: ((RequestStatusCallback) -> ())) {
+        tempBlock = completion
+        locationManager?.delegate = self
+        locationManager?.requestWhenInUseAuthorization()
+    }
+    
+    
+    // MARK: CLLocationManagerDelegate
+    
     func locationManager(manager: CLLocationManager!, didChangeAuthorizationStatus status: CLAuthorizationStatus) {
         if status != .Denied {
             tempBlock?(.JustAuthorized)
         } else {
             tempBlock?(.Denied)
         }
-    }
-    
-    
-    private func LocationInUsePermissionStatus() -> StatusType {
-        if !CLLocationManager.locationServicesEnabled() {
-            return .Denied
-        }
-        let status = CLLocationManager.authorizationStatus()
-        switch status {
-        case .AuthorizedAlways, .AuthorizedWhenInUse:
-            return .Authorized
-        case .Restricted, .Denied:
-            return .Denied
-        case .NotDetermined:
-            return .NotDetermined
-        }
-    }
-    
-    private func LocationInUseAskPermission(completion: ((RequestStatusCallback) -> ())) {
-        tempBlock = completion
-        locationManager?.delegate = self
-        locationManager?.requestWhenInUseAuthorization()
     }
     
 }
