@@ -83,7 +83,7 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
         
         if NSUserDefaults.standardUserDefaults().boolForKey("needDrawPermissionController") {
             if let pc = parentController.presentedViewController as? AppPermissionsViewController {
-                pc.dismissViewControllerAnimated(false, completion: { () -> Void in
+                pc.dismissViewControllerAnimated(false, completion: {
                     self.restoreController(parentController)
                 })
             } else {
@@ -110,54 +110,46 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
                 permissionTypes.append(type)
             }
         }
-        
-        self.controller(parentController).present(permissionTypes) { (success) -> Void in
+
+        self.present(parentController, types: permissionTypes) { success in
         }
     }
     
     
-    class func controller(parentController : UIViewController) -> AppPermissionsViewController {
+    class func present(onController: UIViewController, types: [PermissionType], completion: ((Bool)->Void)) {
         
         let controller = AppPermissionsViewController()
         controller.view.backgroundColor = UIColor.blackColor().colorWithAlphaComponent(0.0)
-        controller.parentController = parentController
-        return controller
-    }
-    
-    
-    func present(types: [PermissionType], completion: ((Bool)->Void)) {
+        controller.parentController = onController
         
         NSUserDefaults.standardUserDefaults().setBool(false, forKey: "needDrawPermissionController")
         NSUserDefaults.standardUserDefaults().synchronize()
-        
-        if parentController == nil {
-            return
-        }
-        self.completion = completion
+
+        controller.completion = completion
         
         if types.count == 0 || contains(types, .LocationAlways) || contains(types, .LocationInUse) {
-            self.appPermissions = AppPermissions(useLocation: true)
+            controller.appPermissions = AppPermissions(useLocation: true)
         } else {
-            self.appPermissions = AppPermissions()
+            controller.appPermissions = AppPermissions()
         }
-        self.permissions = permissionsFromPlist(types)
-        if appPermissions!.isAuthorized(self.permissions) {
-            self.completion?(true)
+        controller.permissions = controller.permissionsFromPlist(types)
+        if controller.appPermissions!.isAuthorized(controller.permissions) {
+            controller.completion?(true)
             return
         }
         
-        confureTransition()
-        addContainer(self.permissions.count)
-        addCloseButton()
-        drawPermissions()
+        controller.confureTransition()
+        controller.addContainer(controller.permissions.count)
+        controller.addCloseButton()
+        controller.drawPermissions()
         
-        if parentController!.navigationController != nil {
-            parentController!.navigationController!.presentViewController(self, animated: false, completion: { () -> Void in
-                self.showContainerView()
+        if controller.parentController!.navigationController != nil {
+            controller.parentController!.navigationController!.presentViewController(controller, animated: false, completion: { () -> Void in
+                controller.showContainerView()
             })
         } else {
-            parentController!.presentViewController(self, animated: false, completion: { () -> Void in
-                self.showContainerView()
+            controller.parentController!.presentViewController(controller, animated: false, completion: { () -> Void in
+                controller.showContainerView()
             })
         }
     }

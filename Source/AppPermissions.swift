@@ -44,9 +44,7 @@ enum PermissionType : String {
         var imgname = self.rawValue
         imgname = "camera"
 //        imgname = imgname.lowercaseString.stringByReplacingOccurrencesOfString(" ", withString: "_", options: .LiteralSearch, range: nil)
-        if self == .LocationAlways {
-            imgname = "location_in_use"
-        }
+        if self == .LocationAlways { imgname = "location_in_use" }
         return imgname
     }
 }

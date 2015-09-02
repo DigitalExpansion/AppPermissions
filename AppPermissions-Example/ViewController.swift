@@ -44,11 +44,9 @@ class ViewController: UITableViewController {
     
     @objc private func doneButtonPressed() {
         
-        
-        AppPermissionsViewController.controller(self).present(needTypes, completion: { (success) -> Void in
+        AppPermissionsViewController.present(self, types: needTypes) { success in
             self.navigationItem.title = success ?  "Success" : "Failure"
-        })
-        
+        }
     }
 
     override func didReceiveMemoryWarning() {
