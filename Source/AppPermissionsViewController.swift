@@ -228,7 +228,7 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
     
     func showAlertView() {
         
-        if lessThanEight() {
+        if AppPermissionsViewController.lessThanEight() {
             UIAlertView(title: "", message: "The permission was rejected earlier!\nUse the settings to enable.", delegate: self, cancelButtonTitle: "Cancel").show()
         } else {
             UIAlertView(title: "", message: "The permission was rejected earlier!\nUse the settings to enable.", delegate: self, cancelButtonTitle: "Cancel", otherButtonTitles: "Settings").show()
@@ -354,7 +354,7 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
     
     // MARK: - Transition Controllers
     
-    private func lessThanEight() -> Bool {
+    class func lessThanEight() -> Bool {
         
         if UIDevice.currentDevice().systemVersion.compare("8.0.0", options: NSStringCompareOptions.NumericSearch, range: nil, locale: nil) == NSComparisonResult.OrderedAscending {
             return true
@@ -365,7 +365,7 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
     
     private func confureTransition() {
         
-        if lessThanEight() {
+        if AppPermissionsViewController.lessThanEight() {
             let appDelegate  = UIApplication.sharedApplication().delegate as! AppDelegate
             appDelegate.window?.rootViewController?.modalPresentationStyle = UIModalPresentationStyle.CurrentContext;
         } else {

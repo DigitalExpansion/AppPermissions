@@ -15,6 +15,11 @@ import CoreLocation
 import CoreBluetooth
 import Photos
 
+
+let PermissionKeyNotifications = "AppPermissionsAskedNotifications"
+let PermissionKeyBluetooth     = "AppPermissionsAskedBluetooth"
+let PermissionKeyLocation      = "AppPermissionsUpgradedLocation"
+
 class Permission: NSObject {
     let type : PermissionType
     let title : String
@@ -70,6 +75,7 @@ enum RequestStatusCallback {
 
 class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDelegate {
     
+    let lessThanEight = AppPermissionsViewController.lessThanEight()
     let locationManager: CLLocationManager
     var bluetoothManager: CBPeripheralManager?
     var completionBlock: ((RequestStatusCallback) -> ())?
@@ -222,6 +228,18 @@ class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDe
     
     
     private func statusForMicrophone() -> StatusType {
+        return (lessThanEight) ? statusForMicrophone7() : statusForMicrophone8()
+    }
+    
+    private func statusForMicrophone7() -> StatusType {
+        switch AVCaptureDevice.authorizationStatusForMediaType(AVMediaTypeAudio) {
+        case .Authorized:          return .Authorized
+        case .Restricted, .Denied: return .Denied
+        case .NotDetermined:       return .NotDetermined
+        }
+    }
+    
+    private func statusForMicrophone8() -> StatusType {
         switch AVAudioSession.sharedInstance().recordPermission() {
         case AVAudioSessionRecordPermission.Denied:       return .Denied
         case AVAudioSessionRecordPermission.Undetermined: return .NotDetermined
@@ -239,16 +257,23 @@ class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDe
     
     
     private func statusForNotifications() -> StatusType {
-        let settings = UIApplication.sharedApplication().currentUserNotificationSettings()
-        if settings.types != UIUserNotificationType.None {
-            return .Authorized
-        } else {
-            if NSUserDefaults.standardUserDefaults().boolForKey("PermissionScopeAskedForNotificationsDefaultsKey") {
-                return .Denied
-            } else {
-                return .NotDetermined
-            }
+        return lessThanEight ? statusForNotifications7() : statusForNotifications8()
+    }
+    
+    private func statusForNotifications7() -> StatusType {
+        let settings = UIApplication.sharedApplication().enabledRemoteNotificationTypes()
+        if settings == UIRemoteNotificationType.None {
+            if NSUserDefaults.standardUserDefaults().boolForKey(PermissionKeyNotifications) { return .Denied } else { return .NotDetermined }
         }
+        return .Authorized
+    }
+    
+    private func statusForNotifications8() -> StatusType {
+        let settings = UIApplication.sharedApplication().currentUserNotificationSettings()
+        if settings.types == UIUserNotificationType.None {
+            if NSUserDefaults.standardUserDefaults().boolForKey(PermissionKeyNotifications) { return .Denied } else { return .NotDetermined }
+        }
+        return .Authorized
     }
     
     private func askNotifications(completion: ((RequestStatusCallback) -> ())) {
@@ -257,9 +282,15 @@ class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDe
             let status: RequestStatusCallback = (self.statusForNotifications() == .Authorized) ? .JustAuthorized : .Denied
             completion(status)
         }
-        NSUserDefaults.standardUserDefaults().setBool(true, forKey: "PermissionScopeAskedForNotificationsDefaultsKey")
-        UIApplication.sharedApplication().registerUserNotificationSettings(UIUserNotificationSettings(forTypes: .Alert | .Sound | .Badge, categories: nil))
-        UIApplication.sharedApplication().registerForRemoteNotifications()
+        NSUserDefaults.standardUserDefaults().setBool(true, forKey: PermissionKeyNotifications)
+        NSUserDefaults.standardUserDefaults().synchronize()
+        if lessThanEight {
+            let types = UIRemoteNotificationType.Badge | UIRemoteNotificationType.Sound | UIRemoteNotificationType.Alert
+            UIApplication.sharedApplication().registerForRemoteNotificationTypes(types)
+        } else {
+            UIApplication.sharedApplication().registerUserNotificationSettings(UIUserNotificationSettings(forTypes: .Alert | .Sound | .Badge, categories: nil))
+            UIApplication.sharedApplication().registerForRemoteNotifications()
+        }
     }
     
     
@@ -273,7 +304,7 @@ class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDe
         case .Denied:           return .Denied
         case .NotDetermined:    return .NotDetermined
         case .AuthorizedWhenInUse:
-            if NSUserDefaults.standardUserDefaults().boolForKey("requestedInUseToAlwaysUpgrade") {
+            if NSUserDefaults.standardUserDefaults().boolForKey(PermissionKeyLocation) {
                 return .Denied
             } else {
                 return .NotDetermined
@@ -283,7 +314,7 @@ class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDe
     
     private func askLocationAlways(completion: ((RequestStatusCallback) -> ())) {
         if CLLocationManager.authorizationStatus() == .AuthorizedWhenInUse {
-            NSUserDefaults.standardUserDefaults().setBool(true, forKey: "requestedInUseToAlwaysUpgrade")
+            NSUserDefaults.standardUserDefaults().setBool(true, forKey: PermissionKeyLocation)
             NSUserDefaults.standardUserDefaults().synchronize()
         }
         completionBlock = completion
@@ -310,7 +341,7 @@ class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDe
     
     
     private func statusForBluetooth() -> StatusType {
-        if NSUserDefaults.standardUserDefaults().boolForKey("alreadyAskedBluetooth")  {
+        if NSUserDefaults.standardUserDefaults().boolForKey(PermissionKeyBluetooth)  {
             bluetoothManager = CBPeripheralManager(delegate: self, queue: nil, options: [CBPeripheralManagerOptionShowPowerAlertKey: true])
             switch CBPeripheralManager.authorizationStatus() {
             case .Authorized: return .Authorized
@@ -329,6 +360,9 @@ class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDe
     
     
     private func statusForPhoto() -> StatusType {
+        if self.lessThanEight {
+            return .Authorized
+        }
         switch PHPhotoLibrary.authorizationStatus() {
         case .Authorized:          return .Authorized
         case .Denied, .Restricted: return .Denied
@@ -377,7 +411,8 @@ class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDe
     // MARK: - CBPeripheralManagerDelegate
     
     func peripheralManagerDidUpdateState(peripheral: CBPeripheralManager!) {
-        NSUserDefaults.standardUserDefaults().setBool(true, forKey: "alreadyAskedBluetooth")
+        NSUserDefaults.standardUserDefaults().setBool(true, forKey: PermissionKeyBluetooth)
+        NSUserDefaults.standardUserDefaults().synchronize()
         if peripheral.state == .PoweredOn && CBPeripheralManager.authorizationStatus() == .Authorized {
             completionBlock?(.JustAuthorized)
         } else {
