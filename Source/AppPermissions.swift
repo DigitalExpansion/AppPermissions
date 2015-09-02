@@ -12,13 +12,12 @@ import AVFoundation
 import EventKit
 import AddressBook
 import CoreLocation
-
+import CoreBluetooth
+import Photos
 
 class Permission: NSObject {
     let type : PermissionType
     let title : String
-    var button: UIButton?
-    var imageView: UIImageView?
     
     init(type: PermissionType, title: String) {
         self.type = type
@@ -30,15 +29,17 @@ class Permission: NSObject {
 
 enum PermissionType : String {
     case AssetsLibrary  = "Camera Roll"
-    case Camera         = "Camera"
+    case Bluetooth      = "Bluetooth"
     case Calendars      = "Calendars"
+    case Camera         = "Camera"
     case Contacts       = "Contacts"
+    case Events         = "Events"
     case LocationAlways = "Location Always"
     case LocationInUse  = "Location In Use"
     case Microphone     = "Microphone"
     case Notifications  = "Notifications"
-    case Reminders      = "Reminders"
     case Photos         = "Photos"     // iOS 8 (Photo Framework)
+    case Reminders      = "Reminders"
     
     func imageName() -> String {
         var imgname = self.rawValue
@@ -67,29 +68,31 @@ enum RequestStatusCallback {
 
 
 
-class AppPermissions: NSObject, CLLocationManagerDelegate {
+class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDelegate {
     
-    var locationManager: CLLocationManager?
+    let locationManager: CLLocationManager
+    var bluetoothManager: CBPeripheralManager?
     var completionBlock: ((RequestStatusCallback) -> ())?
     
-    init(useLocation: Bool = false) {
+    override init() {   
+        self.locationManager = CLLocationManager()
         super.init()
-        if useLocation {
-            locationManager = CLLocationManager()
-        }
     }
-    
     
     func status(forType type: PermissionType) -> StatusType {
         switch type {
         case .AssetsLibrary:  return statusForAssetsLibrary()
-        case .Camera:         return statusForCamera()
+        case .Bluetooth:      return statusForBluetooth()
         case .Calendars:      return statusForCalendar()
+        case .Camera:         return statusForCamera()
         case .Contacts:       return statusForContacts()
-        case .Microphone:     return statusForMicrophone()
-        case .Notifications:  return statusForNotifications()
+        case .Events:         return statusForEvents()
         case .LocationAlways: return statusForLocationAlways()
         case .LocationInUse:  return statusForLocationInUse()
+        case .Microphone:     return statusForMicrophone()
+        case .Notifications:  return statusForNotifications()
+        case .Photos:         return statusForPhoto()
+        case .Reminders:      return statusForReminders()
         default:
             return .NotDetermined
         }
@@ -121,13 +124,17 @@ class AppPermissions: NSObject, CLLocationManagerDelegate {
         // if status == .NotDetermined
         switch type {
         case .AssetsLibrary:  askAssetsLibrary(callback)
-        case .Camera:         askCamera(callback)
+        case .Bluetooth:      askBluetoth(callback)
         case .Calendars:      askCalendar(callback)
+        case .Camera:         askCamera(callback)
         case .Contacts:       askContacts(callback)
-        case .Microphone:     askMicrophone(callback)
-        case .Notifications:  askNotifications(callback)
+        case .Events:         askEvents(callback)
         case .LocationAlways: askLocationAlways(callback)
         case .LocationInUse:  askLocationInUse(callback)
+        case .Microphone:     askMicrophone(callback)
+        case .Notifications:  askNotifications(callback)
+        case .Photos:         askPhoto(callback)
+        case .Reminders:      askReminders(callback)
         default:
             callback(RequestStatusCallback.Denied)
         }
@@ -266,7 +273,7 @@ class AppPermissions: NSObject, CLLocationManagerDelegate {
         case .Denied:           return .Denied
         case .NotDetermined:    return .NotDetermined
         case .AuthorizedWhenInUse:
-            if NSUserDefaults.standardUserDefaults().boolForKey("requestedInUseToAlwaysUpgrade") == true {
+            if NSUserDefaults.standardUserDefaults().boolForKey("requestedInUseToAlwaysUpgrade") {
                 return .Denied
             } else {
                 return .NotDetermined
@@ -280,8 +287,8 @@ class AppPermissions: NSObject, CLLocationManagerDelegate {
             NSUserDefaults.standardUserDefaults().synchronize()
         }
         completionBlock = completion
-        locationManager?.delegate = self
-        locationManager?.requestAlwaysAuthorization()
+        locationManager.delegate = self
+        locationManager.requestAlwaysAuthorization()
     }
     
     private func statusForLocationInUse() -> StatusType {
@@ -297,8 +304,85 @@ class AppPermissions: NSObject, CLLocationManagerDelegate {
     
     private func askLocationInUse(completion: ((RequestStatusCallback) -> ())) {
         completionBlock = completion
-        locationManager?.delegate = self
-        locationManager?.requestWhenInUseAuthorization()
+        locationManager.delegate = self
+        locationManager.requestWhenInUseAuthorization()
+    }
+    
+    
+    private func statusForBluetooth() -> StatusType {
+        if NSUserDefaults.standardUserDefaults().boolForKey("alreadyAskedBluetooth")  {
+            bluetoothManager = CBPeripheralManager(delegate: self, queue: nil, options: [CBPeripheralManagerOptionShowPowerAlertKey: true])
+            switch CBPeripheralManager.authorizationStatus() {
+            case .Authorized: return .Authorized
+            case .Denied:     return .Denied
+            default:          break
+            }
+        }
+        return .NotDetermined
+    }
+    
+    private func askBluetoth(completion: ((RequestStatusCallback) -> ())) {
+        completionBlock = completion
+        bluetoothManager = CBPeripheralManager(delegate: self, queue: nil, options: [CBPeripheralManagerOptionShowPowerAlertKey: true])
+        CBPeripheralManager.authorizationStatus()
+    }
+    
+    
+    private func statusForPhoto() -> StatusType {
+        switch PHPhotoLibrary.authorizationStatus() {
+        case .Authorized:          return .Authorized
+        case .Denied, .Restricted: return .Denied
+        case .NotDetermined:       return .NotDetermined
+        }
+    }
+    
+    private func askPhoto(completion: ((RequestStatusCallback) -> ())) {
+        PHPhotoLibrary.requestAuthorization { status in
+            status == .Authorized ? completion(.JustAuthorized) : completion(.Denied)
+        }
+    }
+    
+    
+    private func statusForReminders() -> StatusType {
+        switch EKEventStore.authorizationStatusForEntityType(EKEntityTypeReminder) {
+        case .Authorized:          return .Authorized
+        case .Denied, .Restricted: return .Denied
+        case .NotDetermined:       return .NotDetermined
+        }
+    }
+    
+    private func askReminders(completion: ((RequestStatusCallback) -> ())) {
+        EKEventStore().requestAccessToEntityType(EKEntityTypeReminder, completion: { granted, error in
+            granted ? completion(.JustAuthorized) : completion(.Denied)
+        })
+    }
+    
+    
+    private func statusForEvents() -> StatusType {
+        switch EKEventStore.authorizationStatusForEntityType(EKEntityTypeEvent) {
+        case .Authorized:          return .Authorized
+        case .Denied, .Restricted: return .Denied
+        case .NotDetermined:       return .NotDetermined
+        }
+    }
+    
+    private func askEvents(completion: ((RequestStatusCallback) -> ())) {
+        EKEventStore().requestAccessToEntityType(EKEntityTypeEvent, completion: { granted, error in
+            granted ? completion(.JustAuthorized) : completion(.Denied)
+        })
+    }
+    
+    
+    
+    // MARK: - CBPeripheralManagerDelegate
+    
+    func peripheralManagerDidUpdateState(peripheral: CBPeripheralManager!) {
+        NSUserDefaults.standardUserDefaults().setBool(true, forKey: "alreadyAskedBluetooth")
+        if peripheral.state == .PoweredOn && CBPeripheralManager.authorizationStatus() == .Authorized {
+            completionBlock?(.JustAuthorized)
+        } else {
+            completionBlock?(.Denied)
+        }
     }
     
     

@@ -31,7 +31,7 @@ class PermissionCell: UITableViewCell {
 class ViewController: UITableViewController {
 
     
-    let typesData: [PermissionType] = [.AssetsLibrary, .Camera, .Calendars, .Contacts, .LocationAlways, .LocationInUse, .Microphone, .Notifications, .Reminders]
+    let typesData: [PermissionType] = [.AssetsLibrary, .Bluetooth, .Calendars, .Camera, .Contacts, .Events, .LocationAlways, .LocationInUse, .Microphone, .Notifications, .Photos, .Reminders]
     var needTypes = [PermissionType]()
     
     override func viewDidLoad() {
@@ -45,7 +45,8 @@ class ViewController: UITableViewController {
     @objc private func doneButtonPressed() {
         
         AppPermissionsViewController.present(self, types: needTypes) { success in
-            self.navigationItem.title = success ?  "Success" : "Failure"
+            let title = success ?  "Success" : "Failure"
+            UIAlertView(title: "", message: title, delegate: nil, cancelButtonTitle: "Done").show()
         }
     }
 
@@ -59,6 +60,11 @@ class ViewController: UITableViewController {
     
     override func tableView(tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
         return CGFloat.min
+    }
+    
+    
+    override func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
+        return 44
     }
     
     
@@ -80,6 +86,9 @@ class ViewController: UITableViewController {
         return cell
     }
     
+    
+    
+    // MARK: - UISwitch Events
     
     @objc private func switchValueChanged(sender: UISwitch) {
         let type = typesData[sender.tag]

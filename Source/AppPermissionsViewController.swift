@@ -12,10 +12,13 @@ import UIKit
 class PermissionButton: UIButton {
     
     let permission: Permission
+    var iconView: UIImageView?
+    
     init(frame: CGRect, permission: Permission) {
         self.permission = permission
         super.init(frame: frame)
     }
+    
     required init(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -34,9 +37,10 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
     let labelTitleHeight: CGFloat = 30
     let labelDescHeight: CGFloat  = 50
     
+    let themeColor = UIColor(red: 92/255, green: 126/255, blue: 149/255, alpha: 1)
     
     var containerView : UIView?
-    var permissions: [Permission] = [Permission]()
+    var permissionButtons = [PermissionButton]()
     var appPermissions : AppPermissions?
     var parentController : UIViewController?
     var completion : ((Bool)->Void)?
@@ -126,22 +130,19 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
         NSUserDefaults.standardUserDefaults().synchronize()
 
         controller.completion = completion
+        controller.appPermissions = AppPermissions()
         
-        if types.count == 0 || contains(types, .LocationAlways) || contains(types, .LocationInUse) {
-            controller.appPermissions = AppPermissions(useLocation: true)
-        } else {
-            controller.appPermissions = AppPermissions()
-        }
-        controller.permissions = controller.permissionsFromPlist(types)
-        if controller.appPermissions!.isAuthorized(controller.permissions) {
+        let permissionsArray = controller.permissionsFromPlist(types)
+        
+        if controller.appPermissions!.isAuthorized(permissionsArray) {
             controller.completion?(true)
             return
         }
         
         controller.confureTransition()
-        controller.addContainer(controller.permissions.count)
+        controller.addContainer(permissionsArray.count)
         controller.addCloseButton()
-        controller.drawPermissions()
+        controller.drawPermissions(permissionsArray)
         
         if controller.parentController!.navigationController != nil {
             controller.parentController!.navigationController!.presentViewController(controller, animated: false, completion: { () -> Void in
@@ -158,8 +159,8 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
     @objc private func updatePermissionsStatus() {
         
         var array = [String]()
-        for permission in permissions {
-            array.append(permission.type.rawValue)
+        for permissionButton in permissionButtons {
+            array.append(permissionButton.permission.type.rawValue)
         }
         NSUserDefaults.standardUserDefaults().setValue(array, forKey: "RestoredKeys")
         NSUserDefaults.standardUserDefaults().setBool(true, forKey: "needDrawPermissionController")
@@ -167,21 +168,21 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
     }
     
     
-    private func drawPermissions() {
+    private func drawPermissions(permissionsArray: [Permission]) {
         
         var currentOffset = headerHeight
-        for permission in permissions {
+        for permission in permissionsArray {
             let button = PermissionButton(frame: CGRect(x: (containerWidth - buttonWidth) * 0.5, y: currentOffset, width: buttonWidth, height: buttonHeight), permission: permission)
             button.layer.cornerRadius = buttonHeight * 0.5
             
             let status = self.appPermissions!.status(forType: permission.type)
             if status == .Authorized {
                 button.setTitleColor(UIColor.whiteColor(), forState: UIControlState.Normal)
-                button.backgroundColor = UIColor(red: 48/255, green: 215/255, blue: 143/255, alpha: 1.0)
+                button.backgroundColor = themeColor
                 
             } else {
-                button.setTitleColor(UIColor(white: 0.2, alpha: 1.0), forState: UIControlState.Normal)
-                button.layer.borderColor = UIColor.blackColor().CGColor
+                button.setTitleColor(themeColor, forState: UIControlState.Normal)
+                button.layer.borderColor = themeColor.CGColor
                 button.layer.borderWidth = 1
             }
             
@@ -191,18 +192,15 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
             button.titleEdgeInsets = UIEdgeInsetsMake(0, buttonHeight + 6, 0, 0)
             button.addTarget(self, action: "permissionButtonPressed:", forControlEvents: UIControlEvents.TouchUpInside)
             self.containerView?.addSubview(button)
-            permission.button = button
             currentOffset += buttonHeight + itemsOffset
             
             let imageView = UIImageView(frame: CGRect(x: button.frame.origin.x + 6, y: button.frame.origin.y, width: buttonHeight, height: buttonHeight))
             imageView.contentMode = UIViewContentMode.Center
-            if status == .Authorized {
-                imageView.image = UIImage(named: "check_img")
-            } else {
-                imageView.image = UIImage(named: permission.type.imageName())
-            }
+            let imagename = (status == .Authorized) ? "check_img" : permission.type.imageName()
+            imageView.image = UIImage(named: imagename)
             self.containerView?.addSubview(imageView)
-            permission.imageView = imageView
+            button.iconView = imageView
+            permissionButtons.append(button)
         }
     }
     
@@ -254,10 +252,15 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
             
             button.setTitleColor(UIColor.whiteColor(), forState: UIControlState.Normal)
             button.layer.borderWidth = 0
-            button.backgroundColor = UIColor(red: 48/255, green: 215/255, blue: 143/255, alpha: 1.0)
-            button.permission.imageView?.image = UIImage(named: "check_img")
+            button.backgroundColor = self.themeColor
+            button.iconView?.image = UIImage(named: "check_img")
             
-            if self.appPermissions!.isAuthorized(self.permissions) {
+            var permissionArray = [Permission]()
+            for permissionButton in self.permissionButtons {
+                permissionArray.append(permissionButton.permission)
+            }
+            
+            if self.appPermissions!.isAuthorized(permissionArray) {
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(0.7 * Double(NSEC_PER_SEC))), dispatch_get_main_queue()) { () -> Void in
                     self.hideContainerView(true)
                 }
@@ -300,7 +303,7 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
         self.view.addSubview(containerView!)
         
         let titleLabel = UILabel(frame: CGRect(x: (whiteFrame.size.width - buttonWidth) * 0.5, y: headerHeight * 0.5 - labelTitleHeight, width: buttonWidth, height: labelTitleHeight))
-        titleLabel.textColor = UIColor(white: 0.1, alpha: 1.0)
+        titleLabel.textColor = themeColor
         titleLabel.text = applicationName
         titleLabel.font = UIFont(name: "HelveticaNeue-Medium", size: 24)!
         titleLabel.textAlignment = NSTextAlignment.Center
@@ -423,13 +426,7 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
         let data : NSMutableDictionary = NSMutableDictionary(contentsOfFile: path)!
         
         if needTypes.count == 0 {
-            for (key, title) in data {
-                let type = PermissionType(rawValue: key as! String)
-                if type != nil {
-                    let permission = Permission(type: type!, title: title as! String)
-                    resultPermissions.append(permission)
-                }
-            }
+            return [Permission]()
         } else {
             for type in needTypes {
                 let title = data.objectForKey(type.rawValue) as? String
