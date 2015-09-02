@@ -39,6 +39,16 @@ enum PermissionType : String {
     case Notifications  = "Notifications"
     case Reminders      = "Reminders"
     case Photos         = "Photos"     // iOS 8 (Photo Framework)
+    
+    func imageName() -> String {
+        var imgname = self.rawValue
+        imgname = "camera"
+//        imgname = imgname.lowercaseString.stringByReplacingOccurrencesOfString(" ", withString: "_", options: .LiteralSearch, range: nil)
+        if self == .LocationAlways {
+            imgname = "location_in_use"
+        }
+        return imgname
+    }
 }
 
 

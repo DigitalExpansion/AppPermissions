@@ -196,18 +196,18 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
             button.titleLabel?.font = UIFont(name: "HelveticaNeue-Medium", size: 15)
             button.setTitle(permission.title, forState: UIControlState.Normal)
             button.contentHorizontalAlignment = UIControlContentHorizontalAlignment.Left
-            button.titleEdgeInsets = UIEdgeInsetsMake(0, buttonHeight + 10, 0, 0)
+            button.titleEdgeInsets = UIEdgeInsetsMake(0, buttonHeight + 6, 0, 0)
             button.addTarget(self, action: "permissionButtonPressed:", forControlEvents: UIControlEvents.TouchUpInside)
             self.containerView?.addSubview(button)
             permission.button = button
             currentOffset += buttonHeight + itemsOffset
             
-            let imageView = UIImageView(frame: CGRect(x: button.frame.origin.x, y: button.frame.origin.y, width: buttonHeight, height: buttonHeight))
+            let imageView = UIImageView(frame: CGRect(x: button.frame.origin.x + 6, y: button.frame.origin.y, width: buttonHeight, height: buttonHeight))
             imageView.contentMode = UIViewContentMode.Center
             if status == .Authorized {
-                imageView.image = UIImage(named: "ok")
+                imageView.image = UIImage(named: "check_img")
             } else {
-                imageView.image = UIImage(named: "mic")
+                imageView.image = UIImage(named: permission.type.imageName())
             }
             self.containerView?.addSubview(imageView)
             permission.imageView = imageView
@@ -263,7 +263,7 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
             button.setTitleColor(UIColor.whiteColor(), forState: UIControlState.Normal)
             button.layer.borderWidth = 0
             button.backgroundColor = UIColor(red: 48/255, green: 215/255, blue: 143/255, alpha: 1.0)
-            button.permission.imageView?.image = UIImage(named: "ok")
+            button.permission.imageView?.image = UIImage(named: "check_img")
             
             if self.appPermissions!.isAuthorized(self.permissions) {
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(0.7 * Double(NSEC_PER_SEC))), dispatch_get_main_queue()) { () -> Void in
