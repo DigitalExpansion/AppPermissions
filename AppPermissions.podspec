@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
   spec.name         = 'AppPermissions'
-  spec.version      = '1.0'
+  spec.version      = '1.1'
   spec.summary      = 'Swift library for application permissions.'
   spec.homepage     = 'https://github.com/DigitalExpansion/AppPermissions'
   spec.author       = { 'Digital Expansion' => 'de@ad1.ru' }
