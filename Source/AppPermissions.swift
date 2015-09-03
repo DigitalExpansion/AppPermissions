@@ -282,13 +282,13 @@ class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDe
         }
         NSUserDefaults.standardUserDefaults().setBool(true, forKey: PermissionKeyNotifications)
         NSUserDefaults.standardUserDefaults().synchronize()
-        if lessThanEight {
+#if __IPHONE_8_0
             let types = UIRemoteNotificationType.Badge | UIRemoteNotificationType.Sound | UIRemoteNotificationType.Alert
             UIApplication.sharedApplication().registerForRemoteNotificationTypes(types)
-        } else {
+#else
             UIApplication.sharedApplication().registerUserNotificationSettings(UIUserNotificationSettings(forTypes: .Alert | .Sound | .Badge, categories: nil))
             UIApplication.sharedApplication().registerForRemoteNotifications()
-        }
+#endif
     }
     
     
