@@ -255,7 +255,11 @@ class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDe
     
     
     private func statusForNotifications() -> StatusType {
-        return lessThanEight ? statusForNotifications7() : statusForNotifications8()
+#if __IPHONE_8_0
+        return statusForNotifications8()
+#else
+        return statusForNotifications7()
+#endif
     }
     
     private func statusForNotifications7() -> StatusType {
