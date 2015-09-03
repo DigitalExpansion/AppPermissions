@@ -64,4 +64,4 @@ add in `info.plist` rows `NSLocationAlwaysUsageDescription` and `NSLocationWhenI
 
 #### about Bluetooth Permission
 
-add in `info.plist` row `NSBluetoothPeripheralUsageDescription` and enable `background-modes` in the `capabilities` section and checking the `Acts as a Bluetooth LE accessory` checkbox (required)
+add in `info.plist` row `NSBluetoothPeripheralUsageDescription` and enable `background-modes` in the `capabilities` section and check the `Acts as a Bluetooth LE accessory` checkbox (required)
