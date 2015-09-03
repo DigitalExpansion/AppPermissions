@@ -46,4 +46,16 @@ AppPermissionsViewController.present(self, types: [.Calendars, .Camera, .Contact
         }
 ```
 
-### available permissions
+### available permissions 
+* PermissionType.AssetsLibrary
+* .Bluetooth
+* .Calendars
+* .Camera
+* .Contacts
+* .Events
+* .LocationAlways
+* .LocationInUse
+* .Microphone
+* .Notifications
+* .Photos
+* .Reminders
