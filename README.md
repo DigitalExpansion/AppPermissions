@@ -14,7 +14,7 @@ from Source Files
 
 ##  usage
 
-in `applicationDidBecomeActive` add:
+in `applicationDidBecomeActive`  in `AppDelegate` add:
 
 ```swift
 func applicationDidBecomeActive(application: UIApplication) {
@@ -22,5 +22,16 @@ func applicationDidBecomeActive(application: UIApplication) {
         if let root = self.window?.rootViewController {
             AppPermissionsViewController.restoreControllerIfNeeded(root)
         }
+    }
+```
+
+if iOS 7 add:
+```swift
+func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
+
+        ...
+        
+        self.window?.rootViewController?.modalPresentationStyle = UIModalPresentationStyle.CurrentContext;
+        return true
     }
 ```
