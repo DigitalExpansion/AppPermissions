@@ -32,7 +32,7 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
     let headerHeight: CGFloat     = 140
     let bottomOffset: CGFloat     = 20
     let buttonHeight: CGFloat     = 44
-    let buttonWidth: CGFloat      = 220
+    let buttonWidth: CGFloat      = 240
     let itemsOffset: CGFloat      = 18
     let labelTitleHeight: CGFloat = 30
     let labelDescHeight: CGFloat  = 50
@@ -55,7 +55,7 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
         }
         return appName!
     }
-    let descriptionText = "We need a few things before you can start a battle"
+    let descriptionText = "We need a few things before you can start"
     
     
     
@@ -188,15 +188,16 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
             
             button.titleLabel?.font = UIFont(name: "HelveticaNeue-Medium", size: 15)
             button.setTitle(permission.title, forState: UIControlState.Normal)
-            button.contentHorizontalAlignment = UIControlContentHorizontalAlignment.Left
-            button.titleEdgeInsets = UIEdgeInsetsMake(0, buttonHeight + 6, 0, 0)
+            button.contentHorizontalAlignment = UIControlContentHorizontalAlignment.Center
+            button.titleEdgeInsets = UIEdgeInsetsMake(0, buttonHeight - 5, 0, buttonHeight - 5)
+            button.titleLabel?.lineBreakMode = NSLineBreakMode.ByTruncatingTail
             button.addTarget(self, action: "permissionButtonPressed:", forControlEvents: UIControlEvents.TouchUpInside)
             self.containerView?.addSubview(button)
             currentOffset += buttonHeight + itemsOffset
             
             let imageView = UIImageView(frame: CGRect(x: button.frame.origin.x + 6, y: button.frame.origin.y, width: buttonHeight, height: buttonHeight))
             imageView.contentMode = UIViewContentMode.Center
-            let imagename = (status == .Authorized) ? "check_img" : permission.type.imageName()
+            let imagename = (status == .Authorized) ? "ap_check_img" : permission.type.imageName()
             imageView.image = UIImage(named: imagename)
             self.containerView?.addSubview(imageView)
             button.iconView = imageView
@@ -253,7 +254,7 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
             button.setTitleColor(UIColor.whiteColor(), forState: UIControlState.Normal)
             button.layer.borderWidth = 0
             button.backgroundColor = self.themeColor
-            button.iconView?.image = UIImage(named: "check_img")
+            button.iconView?.image = UIImage(named: "ap_check_img")
             
             var permissionArray = [Permission]()
             for permissionButton in self.permissionButtons {
@@ -274,7 +275,7 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
     private func addCloseButton() {
         
         let button = UIButton(frame: CGRect(x: containerWidth - 40, y: 10, width: 30, height: 30))
-        button.setImage(UIImage(named: "close_btn"), forState: UIControlState.Normal)
+        button.setImage(UIImage(named: "ap_close_btn"), forState: UIControlState.Normal)
         button.setTitleColor(UIColor.whiteColor(), forState: UIControlState.Normal)
         button.addTarget(self, action: "closeButtonPressed", forControlEvents: UIControlEvents.TouchUpInside)
         self.containerView?.addSubview(button)

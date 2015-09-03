@@ -47,10 +47,8 @@ enum PermissionType : String {
     case Reminders      = "Reminders"
     
     func imageName() -> String {
-        var imgname = self.rawValue
-        imgname = "camera"
-//        imgname = imgname.lowercaseString.stringByReplacingOccurrencesOfString(" ", withString: "_", options: .LiteralSearch, range: nil)
-        if self == .LocationAlways { imgname = "location_in_use" }
+        var imgname = String(format: "ap_%@", self.rawValue)
+        imgname = imgname.lowercaseString.stringByReplacingOccurrencesOfString(" ", withString: "_", options: .LiteralSearch, range: nil)
         return imgname
     }
 }
@@ -312,7 +310,22 @@ class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDe
         }
     }
     
+    
     private func askLocationAlways(completion: ((RequestStatusCallback) -> ())) {
+        return lessThanEight ? askLocationAlways7(completion) : askLocationAlways8(completion)
+    }
+    
+    private func askLocationAlways7(completion: ((RequestStatusCallback) -> ())) {
+        if CLLocationManager.authorizationStatus() == .AuthorizedWhenInUse {
+            NSUserDefaults.standardUserDefaults().setBool(true, forKey: PermissionKeyLocation)
+            NSUserDefaults.standardUserDefaults().synchronize()
+        }
+        completionBlock = completion
+        locationManager.delegate = self
+        locationManager.startUpdatingLocation()
+    }
+    
+    private func askLocationAlways8(completion: ((RequestStatusCallback) -> ())) {
         if CLLocationManager.authorizationStatus() == .AuthorizedWhenInUse {
             NSUserDefaults.standardUserDefaults().setBool(true, forKey: PermissionKeyLocation)
             NSUserDefaults.standardUserDefaults().synchronize()
@@ -321,6 +334,7 @@ class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDe
         locationManager.delegate = self
         locationManager.requestAlwaysAuthorization()
     }
+    
     
     private func statusForLocationInUse() -> StatusType {
         if !CLLocationManager.locationServicesEnabled() {
@@ -334,6 +348,16 @@ class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDe
     }
     
     private func askLocationInUse(completion: ((RequestStatusCallback) -> ())) {
+        return lessThanEight ? askLocationInUse7(completion) : askLocationInUse8(completion)
+    }
+    
+    private func askLocationInUse7(completion: ((RequestStatusCallback) -> ())) {
+        completionBlock = completion
+        locationManager.delegate = self
+        locationManager.startUpdatingLocation()
+        
+    }
+    private func askLocationInUse8(completion: ((RequestStatusCallback) -> ())) {
         completionBlock = completion
         locationManager.delegate = self
         locationManager.requestWhenInUseAuthorization()
@@ -342,7 +366,9 @@ class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDe
     
     private func statusForBluetooth() -> StatusType {
         if NSUserDefaults.standardUserDefaults().boolForKey(PermissionKeyBluetooth)  {
-            bluetoothManager = CBPeripheralManager(delegate: self, queue: nil, options: [CBPeripheralManagerOptionShowPowerAlertKey: true])
+            if bluetoothManager == nil {
+                bluetoothManager = CBPeripheralManager(delegate: nil, queue: nil, options: [CBPeripheralManagerOptionShowPowerAlertKey: true])
+            }
             switch CBPeripheralManager.authorizationStatus() {
             case .Authorized: return .Authorized
             case .Denied:     return .Denied
@@ -413,7 +439,7 @@ class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDe
     func peripheralManagerDidUpdateState(peripheral: CBPeripheralManager!) {
         NSUserDefaults.standardUserDefaults().setBool(true, forKey: PermissionKeyBluetooth)
         NSUserDefaults.standardUserDefaults().synchronize()
-        if peripheral.state == .PoweredOn && CBPeripheralManager.authorizationStatus() == .Authorized {
+        if CBPeripheralManager.authorizationStatus() == .Authorized {
             completionBlock?(.JustAuthorized)
         } else {
             completionBlock?(.Denied)
