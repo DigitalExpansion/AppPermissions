@@ -14,6 +14,8 @@ from Source Files
 
 ##  usage
 
+### preconfiguration
+
 in `applicationDidBecomeActive`  in `AppDelegate` add:
 
 ```swift
@@ -35,3 +37,13 @@ func application(application: UIApplication, didFinishLaunchingWithOptions launc
         return true
     }
 ```
+### present permissions controller
+
+```swift
+AppPermissionsViewController.present(self, types: [.Calendars, .Camera, .Contacts]) { success in
+        if success {
+            ...
+        }
+```
+
+### available permissions
