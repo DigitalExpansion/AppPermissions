@@ -24,6 +24,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         self.window?.rootViewController = navc
         self.window?.makeKeyAndVisible()
+#if __IPHONE_7_0
+    self.window?.rootViewController?.modalPresentationStyle = UIModalPresentationStyle.CurrentContext;
+#endif
         
         return true
     }

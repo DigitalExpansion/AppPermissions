@@ -369,9 +369,6 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
     parentController!.providesPresentationContextTransitionStyle = true
     parentController!.definesPresentationContext = true
     self.modalPresentationStyle = UIModalPresentationStyle.OverCurrentContext
-#else
-    let appDelegate  = UIApplication.sharedApplication().delegate as! AppDelegate
-    appDelegate.window?.rootViewController?.modalPresentationStyle = UIModalPresentationStyle.CurrentContext;
 #endif
     }
     
