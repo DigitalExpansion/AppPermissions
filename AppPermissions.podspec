@@ -5,7 +5,7 @@ Pod::Spec.new do |spec|
   spec.homepage     = 'https://github.com/DigitalExpansion/AppPermissions'
   spec.author       = { 'Digital Expansion' => 'de@ad1.ru' }
   spec.source       = { :git => 'https://github.com/DigitalExpansion/AppPermissions.git', :tag => "v#{spec.version}" }
-  spec.source_files = 'Source/*'
+  spec.source_files = 'Source/*.swift'
   spec.requires_arc = true
   spec.license      = { :type => 'MIT', :file => 'LICENSE' }
   spec.frameworks   = 'UIKit'
