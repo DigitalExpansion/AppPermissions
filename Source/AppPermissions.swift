@@ -263,14 +263,14 @@ class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDe
     }
     
     private func statusForNotifications7() -> StatusType {
-#if __IPHONE_8_0
-        return .Denied
+#if __IPHONE_7_0
+    let settings = UIApplication.sharedApplication().enabledRemoteNotificationTypes()
+    if settings == UIRemoteNotificationType.None {
+    if NSUserDefaults.standardUserDefaults().boolForKey(PermissionKeyNotifications) { return .Denied } else { return .NotDetermined }
+    }
+    return .Authorized
 #else
-        let settings = UIApplication.sharedApplication().enabledRemoteNotificationTypes()
-        if settings == UIRemoteNotificationType.None {
-            if NSUserDefaults.standardUserDefaults().boolForKey(PermissionKeyNotifications) { return .Denied } else { return .NotDetermined }
-        }
-        return .Authorized
+    return .Denied
 #endif
     }
     
