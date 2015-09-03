@@ -11,3 +11,16 @@ iOS 8:
 
 iOS 7:
 from Source Files
+
+##  usage
+
+in `applicationDidBecomeActive` add:
+
+```swift
+func applicationDidBecomeActive(application: UIApplication) {
+        
+        if let root = self.window?.rootViewController {
+            AppPermissionsViewController.restoreControllerIfNeeded(root)
+        }
+    }
+```
