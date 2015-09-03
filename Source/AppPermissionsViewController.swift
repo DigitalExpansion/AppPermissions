@@ -365,15 +365,14 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
     
     
     private func confureTransition() {
-        
-        if AppPermissionsViewController.lessThanEight() {
-            let appDelegate  = UIApplication.sharedApplication().delegate as! AppDelegate
-            appDelegate.window?.rootViewController?.modalPresentationStyle = UIModalPresentationStyle.CurrentContext;
-        } else {
-            parentController!.providesPresentationContextTransitionStyle = true
-            parentController!.definesPresentationContext = true
-            self.modalPresentationStyle = UIModalPresentationStyle.OverCurrentContext
-        }
+#if __IPHONE_8_0
+    parentController!.providesPresentationContextTransitionStyle = true
+    parentController!.definesPresentationContext = true
+    self.modalPresentationStyle = UIModalPresentationStyle.OverCurrentContext
+#else
+    let appDelegate  = UIApplication.sharedApplication().delegate as! AppDelegate
+    appDelegate.window?.rootViewController?.modalPresentationStyle = UIModalPresentationStyle.CurrentContext;
+#endif
     }
     
     
