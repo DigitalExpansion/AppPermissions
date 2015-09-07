@@ -27,7 +27,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
 #if __IPHONE_8_0
 #else
-    println("!")
         self.window?.rootViewController?.modalPresentationStyle = UIModalPresentationStyle.CurrentContext;
 #endif
     
