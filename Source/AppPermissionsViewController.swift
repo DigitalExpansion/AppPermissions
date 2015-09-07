@@ -365,7 +365,8 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
     
     
     private func confureTransition() {
-#if __IPHONE_8_0
+#if __IPHONE_7_0
+#else
     parentController!.providesPresentationContextTransitionStyle = true
     parentController!.definesPresentationContext = true
     self.modalPresentationStyle = UIModalPresentationStyle.OverCurrentContext
