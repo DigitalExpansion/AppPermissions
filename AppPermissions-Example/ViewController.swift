@@ -10,7 +10,7 @@ import UIKit
 
 extension Array {
     mutating func remove <U: Equatable> (object: U) {
-        for i in stride(from: self.count-1, through: 0, by: -1) {
+        for i in (self.count-1).stride(through: 0, by: -1) {
             if let element = self[i] as? U {
                 if element == object {
                     self.removeAtIndex(i)
@@ -79,7 +79,7 @@ class ViewController: UITableViewController {
         cell.permissionLabel.text = permissionType.rawValue
         cell.permissionSwitch.tag = indexPath.row
         cell.permissionSwitch.addTarget(self, action: "switchValueChanged:", forControlEvents: UIControlEvents.ValueChanged)
-        if contains(needTypes, permissionType) {
+        if needTypes.contains(permissionType) {
             cell.permissionSwitch.setOn(true, animated: false)
         }
         
@@ -92,7 +92,7 @@ class ViewController: UITableViewController {
     
     @objc private func switchValueChanged(sender: UISwitch) {
         let type = typesData[sender.tag]
-        let isContained = contains(needTypes, type)
+        let isContained = needTypes.contains(type)
         if sender.on  && !isContained {
             needTypes.append(type)
         } else if !sender.on && isContained {

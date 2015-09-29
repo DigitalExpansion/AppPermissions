@@ -112,7 +112,9 @@
 		B6E4E5011B95BAB600F1BC6B /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0640;
+				LastSwiftMigration = 0700;
+				LastSwiftUpdateCheck = 0700;
+				LastUpgradeCheck = 0700;
 				ORGANIZATIONNAME = "Digital Expansion Inc.";
 				TargetAttributes = {
 					B6E4E5081B95BAB600F1BC6B = {
@@ -203,6 +205,7 @@
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -271,6 +274,7 @@
 				INFOPLIST_FILE = "AppPermissions-Example/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.de.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = AppPermissions;
 			};
 			name = Debug;
@@ -283,6 +287,7 @@
 				INFOPLIST_FILE = "AppPermissions-Example/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.de.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = AppPermissions;
 			};
 			name = Release;

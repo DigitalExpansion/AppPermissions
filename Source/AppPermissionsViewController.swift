@@ -19,7 +19,7 @@ class PermissionButton: UIButton {
         super.init(frame: frame)
     }
     
-    required init(coder aDecoder: NSCoder) {
+    required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 }
@@ -213,14 +213,14 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
         self.appPermissions!.ask(forType: button.permission.type, callback: { requestStatus in
             switch requestStatus {
             case .AlreadyAuthorized:
-                println("PERMISSIONS: nothing to do")
+                print("PERMISSIONS: nothing to do")
             case .Denied:
-                println("PERMISSIONS: auth denied, settings")
+                print("PERMISSIONS: auth denied, settings")
             case .JustAuthorized:
-                println("PERMISSIONS: auth success")
+                print("PERMISSIONS: auth success")
                 self.buttonSetOn(button)
             case .NeedSettings:
-                println("PERMISSIONS: need settings")
+                print("PERMISSIONS: need settings")
                 self.showAlertView()
             }
         })
@@ -230,7 +230,7 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
     func showAlertView() {
         
         if AppPermissionsViewController.lessThanEight() {
-            UIAlertView(title: "", message: "The permission was rejected earlier!\nUse the settings to enable.", delegate: self, cancelButtonTitle: "Cancel").show()
+            UIAlertView(title: "", message: "The permission was rejected earlier!\nUse the settings to enable.", delegate: nil, cancelButtonTitle: "Cancel").show()
         } else {
             UIAlertView(title: "", message: "The permission was rejected earlier!\nUse the settings to enable.", delegate: self, cancelButtonTitle: "Cancel", otherButtonTitles: "Settings").show()
         }
@@ -240,8 +240,10 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
     func alertView(alertView: UIAlertView, clickedButtonAtIndex buttonIndex: Int) {
         
         if buttonIndex != alertView.cancelButtonIndex {
-            if let appString = NSURL(string: UIApplicationOpenSettingsURLString) {
-                UIApplication.sharedApplication().openURL(appString)
+            if #available(iOS 8.0, *) {
+                if let appString = NSURL(string: UIApplicationOpenSettingsURLString) {
+                    UIApplication.sharedApplication().openURL(appString)
+                }
             }
         }
     }
@@ -365,12 +367,11 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
     
     
     private func confureTransition() {
-#if __IPHONE_7_0
-#else
-    parentController!.providesPresentationContextTransitionStyle = true
-    parentController!.definesPresentationContext = true
-    self.modalPresentationStyle = UIModalPresentationStyle.OverCurrentContext
-#endif
+        if #available(iOS 8.0, *) {
+            parentController!.providesPresentationContextTransitionStyle = true
+            parentController!.definesPresentationContext = true
+            self.modalPresentationStyle = UIModalPresentationStyle.OverCurrentContext
+        }
     }
     
     
@@ -378,27 +379,14 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
     
     class func configureIfNeeded(permissions: [Permission]) {
         
-        let paths = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0] as? String
-        if  paths == nil {
-            return
-        }
-        
-        let path = paths!.stringByAppendingPathComponent("PermissionData.plist")
-        let fileManager = NSFileManager.defaultManager()
-        
-        if fileManager.fileExistsAtPath(path) {
-//            let data : NSMutableDictionary = NSMutableDictionary(contentsOfFile: path)!
-//            for (key, value) in data {
-//                println("\(key):  \(value)")
-//            }
-            return
-        }
-        var data : NSMutableDictionary = NSMutableDictionary()
+        let paths = NSFileManager.defaultManager().URLsForDirectory(NSSearchPathDirectory.DocumentationDirectory, inDomains: NSSearchPathDomainMask.UserDomainMask)
+        let path = paths[0]
+        let data : NSMutableDictionary = NSMutableDictionary()
         
         for permission in permissions {
             data.setObject(permission.title, forKey: permission.type.rawValue)
         }
-        data.writeToFile(path, atomically: true)
+        data.writeToFile(path.absoluteString, atomically: true)
     }
     
     
@@ -406,14 +394,14 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
         
         var resultPermissions = [Permission]()
         
-        let paths = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0] as? String
-        if  paths == nil {
+        let paths = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask)
+        if  paths.count == 0 {
             return [Permission]()
         }
         
-        let path = paths!.stringByAppendingPathComponent("PermissionData.plist")
+        let url = paths[0].URLByAppendingPathComponent("PermissionData.plist")
         let fileManager = NSFileManager.defaultManager()
-        if !fileManager.fileExistsAtPath(path) {
+        if !fileManager.fileExistsAtPath(url.path!) {
             for type in needTypes {
                 let permission = Permission(type: type, title: type.rawValue)
                 resultPermissions.append(permission)
@@ -421,7 +409,7 @@ class AppPermissionsViewController: UIViewController, UIAlertViewDelegate {
             return resultPermissions
         }
         
-        let data : NSMutableDictionary = NSMutableDictionary(contentsOfFile: path)!
+        let data : NSMutableDictionary = NSMutableDictionary(contentsOfFile: url.absoluteString)!
         
         if needTypes.count == 0 {
             return [Permission]()

@@ -97,8 +97,6 @@ class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDe
         case .Notifications:  return statusForNotifications()
         case .Photos:         return statusForPhoto()
         case .Reminders:      return statusForReminders()
-        default:
-            return .NotDetermined
         }
     }
     
@@ -139,8 +137,6 @@ class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDe
         case .Notifications:  askNotifications(callback)
         case .Photos:         askPhoto(callback)
         case .Reminders:      askReminders(callback)
-        default:
-            callback(RequestStatusCallback.Denied)
         }
     }
     
@@ -158,7 +154,7 @@ class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDe
     }
     
     private func askAssetsLibrary(completion: ((RequestStatusCallback) -> ())) {
-        var stop : UnsafeMutablePointer<Bool> = nil
+//        var stop : UnsafeMutablePointer<Bool> = nil
         ALAssetsLibrary().enumerateGroupsWithTypes(ALAssetsGroupAll,
             usingBlock: { group, stop in
                 if stop != nil {
@@ -191,7 +187,7 @@ class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDe
     
     
     private func statusForCalendar() -> StatusType {
-        switch EKEventStore.authorizationStatusForEntityType(EKEntityTypeEvent) {
+        switch EKEventStore.authorizationStatusForEntityType(EKEntityType.Event) {
         case .Authorized:    return .Authorized
         case .Denied:        return .Denied
         case .NotDetermined: return .NotDetermined
@@ -200,7 +196,7 @@ class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDe
     }
     
     private func askCalendar(completion: ((RequestStatusCallback) -> ())) {
-        EKEventStore().requestAccessToEntityType(EKEntityTypeEvent, completion: { granted, error in
+        EKEventStore().requestAccessToEntityType(EKEntityType.Event, completion: { granted, error in
             let status: RequestStatusCallback = granted ? .JustAuthorized : .Denied
             completion(status)
         })
@@ -238,11 +234,15 @@ class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDe
     }
     
     private func statusForMicrophone8() -> StatusType {
-        switch AVAudioSession.sharedInstance().recordPermission() {
-        case AVAudioSessionRecordPermission.Denied:       return .Denied
-        case AVAudioSessionRecordPermission.Undetermined: return .NotDetermined
-        case AVAudioSessionRecordPermission.Granted:      return .Authorized
-        default: return .Restricted
+        if #available(iOS 8.0, *) {
+            switch AVAudioSession.sharedInstance().recordPermission() {
+            case AVAudioSessionRecordPermission.Denied:       return .Denied
+            case AVAudioSessionRecordPermission.Undetermined: return .NotDetermined
+            case AVAudioSessionRecordPermission.Granted:      return .Authorized
+            default: return .Restricted
+            }
+        } else {
+            return .Denied
         }
     }
     
@@ -255,19 +255,19 @@ class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDe
     
     
     private func statusForNotifications() -> StatusType {
-#if __IPHONE_7_0
-    let settings = UIApplication.sharedApplication().enabledRemoteNotificationTypes()
-    if settings == UIRemoteNotificationType.None {
-    if NSUserDefaults.standardUserDefaults().boolForKey(PermissionKeyNotifications) { return .Denied } else { return .NotDetermined }
-    }
-    return .Authorized
-#else
-    let settings = UIApplication.sharedApplication().currentUserNotificationSettings()
-    if settings.types == UIUserNotificationType.None {
-        if NSUserDefaults.standardUserDefaults().boolForKey(PermissionKeyNotifications) { return .Denied } else { return .NotDetermined }
-    }
-    return .Authorized
-#endif
+        if #available(iOS 8.0, *) {
+            let settings = UIApplication.sharedApplication().currentUserNotificationSettings()
+            if settings!.types == UIUserNotificationType.None {
+                if NSUserDefaults.standardUserDefaults().boolForKey(PermissionKeyNotifications) { return .Denied } else { return .NotDetermined }
+            }
+            return .Authorized
+        } else {
+            let settings = UIApplication.sharedApplication().enabledRemoteNotificationTypes()
+            if settings == UIRemoteNotificationType.None {
+                if NSUserDefaults.standardUserDefaults().boolForKey(PermissionKeyNotifications) { return .Denied } else { return .NotDetermined }
+            }
+            return .Authorized
+        }
     }
     
     private func askNotifications(completion: ((RequestStatusCallback) -> ())) {
@@ -278,13 +278,13 @@ class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDe
         }
         NSUserDefaults.standardUserDefaults().setBool(true, forKey: PermissionKeyNotifications)
         NSUserDefaults.standardUserDefaults().synchronize()
-#if __IPHONE_8_0
-            let types = UIRemoteNotificationType.Badge | UIRemoteNotificationType.Sound | UIRemoteNotificationType.Alert
-            UIApplication.sharedApplication().registerForRemoteNotificationTypes(types)
-#else
-            UIApplication.sharedApplication().registerUserNotificationSettings(UIUserNotificationSettings(forTypes: .Alert | .Sound | .Badge, categories: nil))
+        
+        if #available(iOS 8.0, *) {
+            UIApplication.sharedApplication().registerUserNotificationSettings(UIUserNotificationSettings(forTypes: [.Alert, .Sound, .Badge], categories: nil))
             UIApplication.sharedApplication().registerForRemoteNotifications()
-#endif
+        } else {
+            UIApplication.sharedApplication().registerForRemoteNotificationTypes([.Alert, .Sound, .Badge])
+        }
     }
     
     
@@ -308,27 +308,19 @@ class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDe
     
     
     private func askLocationAlways(completion: ((RequestStatusCallback) -> ())) {
-        return lessThanEight ? askLocationAlways7(completion) : askLocationAlways8(completion)
-    }
-    
-    private func askLocationAlways7(completion: ((RequestStatusCallback) -> ())) {
-        if CLLocationManager.authorizationStatus() == .AuthorizedWhenInUse {
-            NSUserDefaults.standardUserDefaults().setBool(true, forKey: PermissionKeyLocation)
-            NSUserDefaults.standardUserDefaults().synchronize()
+        if #available(iOS 8.0, *) {
+            if CLLocationManager.authorizationStatus() == .AuthorizedWhenInUse {
+                NSUserDefaults.standardUserDefaults().setBool(true, forKey: PermissionKeyLocation)
+                NSUserDefaults.standardUserDefaults().synchronize()
+            }
+            completionBlock = completion
+            locationManager.delegate = self
+            locationManager.requestAlwaysAuthorization()
+        } else {
+            completionBlock = completion
+            locationManager.delegate = self
+            locationManager.startUpdatingLocation()
         }
-        completionBlock = completion
-        locationManager.delegate = self
-        locationManager.startUpdatingLocation()
-    }
-    
-    private func askLocationAlways8(completion: ((RequestStatusCallback) -> ())) {
-        if CLLocationManager.authorizationStatus() == .AuthorizedWhenInUse {
-            NSUserDefaults.standardUserDefaults().setBool(true, forKey: PermissionKeyLocation)
-            NSUserDefaults.standardUserDefaults().synchronize()
-        }
-        completionBlock = completion
-        locationManager.delegate = self
-        locationManager.requestAlwaysAuthorization()
     }
     
     
@@ -344,19 +336,15 @@ class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDe
     }
     
     private func askLocationInUse(completion: ((RequestStatusCallback) -> ())) {
-        return lessThanEight ? askLocationInUse7(completion) : askLocationInUse8(completion)
-    }
-    
-    private func askLocationInUse7(completion: ((RequestStatusCallback) -> ())) {
-        completionBlock = completion
-        locationManager.delegate = self
-        locationManager.startUpdatingLocation()
-        
-    }
-    private func askLocationInUse8(completion: ((RequestStatusCallback) -> ())) {
-        completionBlock = completion
-        locationManager.delegate = self
-        locationManager.requestWhenInUseAuthorization()
+        if #available(iOS 8.0, *) {
+            completionBlock = completion
+            locationManager.delegate = self
+            locationManager.requestWhenInUseAuthorization()
+        } else {
+            completionBlock = completion
+            locationManager.delegate = self
+            locationManager.startUpdatingLocation()
+        }
     }
     
     
@@ -382,25 +370,28 @@ class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDe
     
     
     private func statusForPhoto() -> StatusType {
-        if self.lessThanEight {
+        if #available(iOS 8.0, *) {
+            switch PHPhotoLibrary.authorizationStatus() {
+            case .Authorized:          return .Authorized
+            case .Denied, .Restricted: return .Denied
+            case .NotDetermined:       return .NotDetermined
+            }
+        } else {
             return .Authorized
-        }
-        switch PHPhotoLibrary.authorizationStatus() {
-        case .Authorized:          return .Authorized
-        case .Denied, .Restricted: return .Denied
-        case .NotDetermined:       return .NotDetermined
         }
     }
     
     private func askPhoto(completion: ((RequestStatusCallback) -> ())) {
-        PHPhotoLibrary.requestAuthorization { status in
-            status == .Authorized ? completion(.JustAuthorized) : completion(.Denied)
+        if #available(iOS 8.0, *) {
+            PHPhotoLibrary.requestAuthorization { status in
+                status == .Authorized ? completion(.JustAuthorized) : completion(.Denied)
+            }
         }
     }
     
     
     private func statusForReminders() -> StatusType {
-        switch EKEventStore.authorizationStatusForEntityType(EKEntityTypeReminder) {
+        switch EKEventStore.authorizationStatusForEntityType(EKEntityType.Reminder) {
         case .Authorized:          return .Authorized
         case .Denied, .Restricted: return .Denied
         case .NotDetermined:       return .NotDetermined
@@ -408,14 +399,14 @@ class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDe
     }
     
     private func askReminders(completion: ((RequestStatusCallback) -> ())) {
-        EKEventStore().requestAccessToEntityType(EKEntityTypeReminder, completion: { granted, error in
+        EKEventStore().requestAccessToEntityType(EKEntityType.Reminder, completion: { granted, error in
             granted ? completion(.JustAuthorized) : completion(.Denied)
         })
     }
     
     
     private func statusForEvents() -> StatusType {
-        switch EKEventStore.authorizationStatusForEntityType(EKEntityTypeEvent) {
+        switch EKEventStore.authorizationStatusForEntityType(EKEntityType.Event) {
         case .Authorized:          return .Authorized
         case .Denied, .Restricted: return .Denied
         case .NotDetermined:       return .NotDetermined
@@ -423,7 +414,7 @@ class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDe
     }
     
     private func askEvents(completion: ((RequestStatusCallback) -> ())) {
-        EKEventStore().requestAccessToEntityType(EKEntityTypeEvent, completion: { granted, error in
+        EKEventStore().requestAccessToEntityType(EKEntityType.Event, completion: { granted, error in
             granted ? completion(.JustAuthorized) : completion(.Denied)
         })
     }
@@ -432,7 +423,7 @@ class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDe
     
     // MARK: - CBPeripheralManagerDelegate
     
-    func peripheralManagerDidUpdateState(peripheral: CBPeripheralManager!) {
+    func peripheralManagerDidUpdateState(peripheral: CBPeripheralManager) {
         NSUserDefaults.standardUserDefaults().setBool(true, forKey: PermissionKeyBluetooth)
         NSUserDefaults.standardUserDefaults().synchronize()
         if CBPeripheralManager.authorizationStatus() == .Authorized {
@@ -445,7 +436,7 @@ class AppPermissions: NSObject, CLLocationManagerDelegate, CBPeripheralManagerDe
     
     // MARK: CLLocationManagerDelegate
     
-    func locationManager(manager: CLLocationManager!, didChangeAuthorizationStatus status: CLAuthorizationStatus) {
+    func locationManager(manager: CLLocationManager, didChangeAuthorizationStatus status: CLAuthorizationStatus) {
         if status != .Denied {
             completionBlock?(.JustAuthorized)
         } else {
