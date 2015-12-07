@@ -7,7 +7,7 @@
 ## installation
 
 iOS 8:
-`pod 'PermissionScope', '~> 0.7'`
+`pod 'AppPermissions'
 
 iOS 7:
 from Source Files
