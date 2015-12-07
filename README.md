@@ -4,7 +4,7 @@
 [![Cocoapods compatible](https://cocoapod-badges.herokuapp.com/v/PermissionScope/badge.png)]
 (https://cocoapods.org/pods/AppPermissions)
 
-## installation
+## Installation
 
 iOS 8:
 `pod 'AppPermissions'`
@@ -12,7 +12,7 @@ iOS 8:
 iOS 7:
 from Source Files
 
-### preconfiguration
+### Preconfiguration
 
 in `applicationDidBecomeActive`  in `AppDelegate` add:
 
@@ -35,7 +35,7 @@ func application(application: UIApplication, didFinishLaunchingWithOptions launc
         return true
     }
 ```
-### present permissions controller
+### Present permissions controller
 
 ```swift
 AppPermissionsViewController.present(self, types: [.Calendars, .Camera, .Contacts]) { success in
@@ -44,7 +44,7 @@ AppPermissionsViewController.present(self, types: [.Calendars, .Camera, .Contact
         }
 ```
 
-### available permissions 
+### Available permissions 
 * PermissionType.AssetsLibrary
 * .Bluetooth
 * .Calendars
@@ -58,10 +58,10 @@ AppPermissionsViewController.present(self, types: [.Calendars, .Camera, .Contact
 * .Photos
 * .Reminders
 
-#### about Location Permission
+#### About Location Permission
 
 add in `info.plist` rows `NSLocationAlwaysUsageDescription` and `NSLocationWhenInUseUsageDescription` for description in dialog message (required)
 
-#### about Bluetooth Permission
+#### About Bluetooth Permission
 
 add in `info.plist` row `NSBluetoothPeripheralUsageDescription` and enable `background-modes` in the `capabilities` section and check the `Acts as a Bluetooth LE accessory` checkbox (required)
