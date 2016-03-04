@@ -1,7 +1,7 @@
 # AppPermissions
 [![Language](http://img.shields.io/badge/language-swift-brightgreen.svg?style=flat)]
 (https://developer.apple.com/swift)
-[![CocoaPods compatible](https://cocoapod-badges.herokuapp.com/v/PermissionScope/badge.png)]
+[![CocoaPods compatible](http://img.shields.io/cocoapods/v/AppPermissions.svg?style=flat)]
 (https://cocoapods.org/pods/AppPermissions)
 
 ## Installation
